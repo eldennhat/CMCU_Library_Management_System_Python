@@ -81,11 +81,12 @@ create table Reader
 
 
 -- Nhân viên
-create table staff
+create table Staff
 (
 	StaffId varchar(255) primary key,
 	FullName nvarchar(255) not null,
 	Phone nvarchar(255) not null,
+	Role nvarchar(255) not null,
 	IsActive bit not null default 1
 )
 
@@ -133,3 +134,4 @@ create table Reservation
 	constraint FK_Reservation_Book foreign key(BookId) references Book(BookId),
 	constraint FK_Reservation_Reader foreign key(ReaderId) references Reader(ReaderId)
 )
+
