@@ -88,7 +88,6 @@ create table Staff
 	StaffId int primary key,
 	FullName nvarchar(255) not null,
 	Phone nvarchar(255) not null,
-	[Role] nvarchar(255) not null,
 	DefaultStart time(0) null,  -- giờ vào ca mặc định (vd 08:00)
     DefaultEnd time(0) null, -- giờ hết ca mặc định (vd 17:00)
 )
@@ -137,3 +136,22 @@ create table Reservation
 	constraint FK_Reservation_Book foreign key(BookId) references Book(BookId),
 	constraint FK_Reservation_Reader foreign key(ReaderId) references Reader(ReaderId)
 )
+
+-- Tài khoản đăng nhập
+create table Account
+(
+	AccountId int primary key identity(1,1),
+	Username varchar(50) not null unique,
+	PasswordHash varchar(255) not null,
+	[Role] nvarchar(50) not null, -- 'Admin' hoặc 'Librarian'
+	StaffId int null, -- liên kết với nhân viên (có thể null cho admin hệ thống)
+
+	constraint CK_Account_Role check (Role in (N'Admin', N'Librarian')),
+	constraint FK_Account_Staff foreign key(StaffId) references Staff(StaffId)
+)
+
+-- Mặc định 2 tài khoản đăng nhập được cấp phát bởi dev
+insert into Account (Username, PasswordHash, [Role], StaffId)
+values 
+	('admin', '123', N'Admin', null),
+	('librarian1', '123', N'Librarian', null)
