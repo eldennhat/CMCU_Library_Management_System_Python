@@ -8,20 +8,20 @@ go
 -- Danh mục cơ bản
 create table Category -- thể loại
 (
-	CategoryId varchar(255) primary key,
+	CategoryId int primary key,
 	CategoryName nvarchar(255) not null unique,
 	[Description] nvarchar(max) null
 )
 
 create table Publisher -- nhà xuất bản
 (
-	PublisherId varchar(255) primary key,
+	PublisherId int primary key,
 	PublichserName nvarchar(255) not null unique
 )
 
 create table Author -- tác giả
 (
-	AuthorId varchar(255) primary key,
+	AuthorId int primary key,
 	AuthorName nvarchar(255) not null unique,
 	PenName nvarchar(255) null unique
 )
@@ -30,11 +30,11 @@ create table Author -- tác giả
 -- Sách
 create table Book
 (
-	BookId varchar(255) primary key,
+	BookId int primary key,
 	ISBN varchar(255) not null unique,
 	Title nvarchar(255) not null,
-	CategoryId varchar(255) not null,
-	PublisherId varchar(255) not null,
+	CategoryId int not null,
+	PublisherId int not null,
 	PublishYear smallint null,
 	
 	constraint CK_Book_PublishYear check (PublishYear between 868 and year(getdate())), -- Năm xuất bản nằm giữa 868 và hiện tại
@@ -45,8 +45,8 @@ create table Book
 
 create table BookAuthor
 (
-	BookId varchar(255) not null,
-	AuthorId varchar(255) not null
+	BookId int not null,
+	AuthorId int not null
 	primary key (BookId, AuthorId)
 
 	constraint FK_BA_Book foreign key(BookId) references Book(BookId) on delete cascade,
@@ -57,8 +57,8 @@ create table BookAuthor
 -- Bản sao sách
 create table BookCopy
 (
-	CopyId varchar(255) primary key,
-	BookId varchar(255) not null,
+	CopyId int primary key,
+	BookId int not null,
 	Barcode varchar(255) not null unique, -- mã vạch
 	StorageNote nvarchar(255) null, -- kệ của sách
 	BookMoney decimal(20,0) null, -- tiền sách
@@ -72,7 +72,7 @@ create table BookCopy
 -- Độc giả
 create table Reader
 (
-	ReaderId varchar(255) primary key,
+	ReaderId int primary key,
 	FullName nvarchar(255) not null,
 	Phone nvarchar(255) not null,
 	[Address] nvarchar(255) not null,
@@ -85,7 +85,7 @@ create table Reader
 -- Nhân viên
 create table Staff
 (
-	StaffId varchar(255) primary key,
+	StaffId int primary key,
 	FullName nvarchar(255) not null,
 	Phone nvarchar(255) not null,
 	[Role] nvarchar(255) not null,
@@ -97,9 +97,9 @@ create table Staff
 -- Phiếu mượn
 create table Loan
 (
-	LoanId varchar(255) primary key,
-	ReaderId varchar(255) not null,
-	StaffId varchar(255) not null,
+	LoanId int primary key,
+	ReaderId int not null,
+	StaffId int not null,
 	LoanDate date not null default cast(getdate() as date),
 	DueDate date not null,
 	Note nvarchar(255) null,
@@ -113,9 +113,9 @@ create table Loan
 -- Chi tiết phiếu mượn
 create table LoanDetail
 (
-	LoanDetailId varchar(255) primary key,
-	LoanId varchar(255) not null,
-	CopyId varchar(255) not null,
+	LoanDetailId int primary key,
+	LoanId int not null,
+	CopyId int not null,
 	ReturnedDate date null,
 	FineAmount decimal(32,2) not null default 0, -- số tiền phạt
 
@@ -128,9 +128,9 @@ create table LoanDetail
 -- Đặt chỗ
 create table Reservation
 (
-	ReservationId varchar(255) primary key,
-	BookId varchar(255) not null,
-	ReaderId varchar(255) not null,
+	ReservationId int primary key,
+	BookId int not null,
+	ReaderId int not null,
 	ReservationDate datetime2 not null default sysdatetime(),
 	IsFulfilled bit not null default 0,
 
