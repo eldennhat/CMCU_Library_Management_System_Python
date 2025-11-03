@@ -1,4 +1,4 @@
-﻿if  db_id('LibraryDB') is null
+if  db_id('LibraryDB') is null
 	create database LibraryDB
 
 go
@@ -61,6 +61,7 @@ create table BookCopy
 	BookId varchar(255) not null,
 	Barcode varchar(255) not null unique, -- mã vạch
 	StorageNote nvarchar(255) null, -- kệ của sách
+	BookMoney decimal(20,0) null, -- tiền sách
 	[Status] tinyint not null default 0 -- 0: Available, 1: OnLoan, 2: Lost, 3: Damaged
 
 	constraint CK_Copy_Status check([Status] in (0,1,2,3)),
@@ -76,7 +77,8 @@ create table Reader
 	Phone nvarchar(255) not null,
 	[Address] nvarchar(255) not null,
 	CreateAt datetime2 not null default sysdatetime(), -- lưu thời điểm bản ghi được tạo
-	IsActive bit not null default 1 -- mặc định đang hoạt động
+	Fine decimal(20,0) null, -- tiền phạt
+	Deposit decimal(20, 0) null -- tiền cọc (tiền cọc > tiền sách + tiền phạt)
 )
 
 
@@ -86,8 +88,9 @@ create table Staff
 	StaffId varchar(255) primary key,
 	FullName nvarchar(255) not null,
 	Phone nvarchar(255) not null,
-	Role nvarchar(255) not null,
-	IsActive bit not null default 1
+	[Role] nvarchar(255) not null,
+	DefaultStart time(0) null,  -- giờ vào ca mặc định (vd 08:00)
+    DefaultEnd time(0) null, -- giờ hết ca mặc định (vd 17:00)
 )
 
 
@@ -134,4 +137,3 @@ create table Reservation
 	constraint FK_Reservation_Book foreign key(BookId) references Book(BookId),
 	constraint FK_Reservation_Reader foreign key(ReaderId) references Reader(ReaderId)
 )
-
