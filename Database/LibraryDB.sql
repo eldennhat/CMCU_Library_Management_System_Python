@@ -13,9 +13,7 @@ create table Book
 	Title nvarchar(255) not null,
 	CategoryName nvarchar(255) not null,
 	BookAuthor nvarchar(255) not null,
-	PublisherName nvarchar(255) not null,
 	PublishYear smallint null,
-	Quantity smallint not null,
 	
 	constraint CK_Book_PublishYear check (PublishYear between 868 and year(getdate()))
 )
@@ -29,6 +27,7 @@ create table BookCopy
 	Barcode varchar(255) not null unique, -- mã vạch
 	StorageNote nvarchar(255) null, -- kệ của sách
 	BookMoney decimal(20,0) null, -- tiền sách
+	PublisherName nvarchar(255) not null,
 	Quantity smallint not null,
 	[Status] tinyint not null default 0, -- 0: Available, 1: OnLoan, 2: Lost, 3: Damaged
 
@@ -136,4 +135,3 @@ insert into Account (Username, PasswordHash, [Role], StaffId)
 values 
 	('admin', '123', N'Admin', null), --username: admin, password: admin123
 	('librarian1', '123', N'Librarian', null)
-
