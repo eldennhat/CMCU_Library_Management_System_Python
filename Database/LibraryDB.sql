@@ -5,52 +5,19 @@ go
 use LibraryDB
 go
 
--- Danh mục cơ bản
-create table Category -- thể loại
-(
-	CategoryId int primary key,
-	CategoryName nvarchar(255) not null unique,
-	[Description] nvarchar(max) null
-)
-
-create table Publisher -- nhà xuất bản
-(
-	PublisherId int primary key,
-	PublichserName nvarchar(255) not null unique
-)
-
-create table Author -- tác giả
-(
-	AuthorId int primary key,
-	AuthorName nvarchar(255) not null unique,
-	PenName nvarchar(255) null unique
-)
-
-
 -- Sách
 create table Book
 (
 	BookId int primary key,
 	ISBN varchar(255) not null unique,
 	Title nvarchar(255) not null,
-	CategoryId int not null,
-	PublisherId int not null,
+	CategoryName nvarchar(255) not null,
+	BookAuthor nvarchar(255) not null,
+	PublisherName nvarchar(255) not null,
 	PublishYear smallint null,
+	Quantity smallint not null,
 	
-	constraint CK_Book_PublishYear check (PublishYear between 868 and year(getdate())), -- Năm xuất bản nằm giữa 868 và hiện tại
-	constraint FK_Book_Category foreign key(CategoryId) references Category(CategoryId), -- CategoryId trong Book phải tồn tại bên Category
-	constraint FK_Book_Publisher foreign key(PublisherId) references Publisher(PublisherId) -- PublisherId trong Book phải tồn tại bên Publisher (có thể NULL)
-)
-
-
-create table BookAuthor
-(
-	BookId int not null,
-	AuthorId int not null
-	primary key (BookId, AuthorId)
-
-	constraint FK_BA_Book foreign key(BookId) references Book(BookId) on delete cascade,
-	constraint FK_BA_Author foreign key(AuthorId) references Author(AuthorId) on delete cascade
+	constraint CK_Book_PublishYear check (PublishYear between 868 and year(getdate()))
 )
 
 
@@ -62,10 +29,24 @@ create table BookCopy
 	Barcode varchar(255) not null unique, -- mã vạch
 	StorageNote nvarchar(255) null, -- kệ của sách
 	BookMoney decimal(20,0) null, -- tiền sách
-	[Status] tinyint not null default 0 -- 0: Available, 1: OnLoan, 2: Lost, 3: Damaged
+	Quantity smallint not null,
+	[Status] tinyint not null default 0, -- 0: Available, 1: OnLoan, 2: Lost, 3: Damaged
 
-	constraint CK_Copy_Status check([Status] in (0,1,2,3)),
-	constraint FK_Copy_Book foreign key(BookId) references Book(BookId) on delete cascade,
+
+	-- Số lượng > 0 => Còn sẵn (0: Available) cho phép sửa sang đang mượn (1: OnLoan) 
+	-- Số lượng = 0 => Không có sẵn (2: Lost)
+	-- Số lượng = -1 => Bị hỏng (3: Damaged)
+
+	constraint CK_Copy_BookMoney check (BookMoney >= 0),
+	constraint CK_Copy_Quantity check (Quantity >= -1), 
+	constraint CK_Copy_Status_Range check([Status] in (0,1,2,3)),
+	constraint CK_Copy_Status_Quantity check (
+    ([Status] = 0 and Quantity > 0) or
+    ([Status] = 1 and Quantity > 0) or
+    ([Status] = 2 and Quantity = 0) or
+    ([Status] = 3 and Quantity = -1)
+	),
+	constraint FK_Copy_Book foreign key(BookId) references Book(BookId) on delete cascade
 )
 
 
@@ -153,5 +134,6 @@ create table Account
 -- Mặc định 2 tài khoản đăng nhập được cấp phát bởi dev
 insert into Account (Username, PasswordHash, [Role], StaffId)
 values 
-	('admin', '123', N'Admin', null),
+	('admin', '123', N'Admin', null), --username: admin, password: admin123
 	('librarian1', '123', N'Librarian', null)
+
