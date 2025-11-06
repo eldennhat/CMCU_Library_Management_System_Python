@@ -28,7 +28,7 @@ create table BookCopy
 	StorageNote nvarchar(255) null, -- kệ của sách
 	BookMoney decimal(20,0) null, -- tiền sách
 	PublisherName nvarchar(255) not null,
-	[Status] tinyint NOT NULL default 0, -- -1: Lost, 0: Available, 1: OnLoan, 2: Damaged
+	[Status] smallint NOT NULL default 0, -- -1: Lost, 0: Available, 1: OnLoan, 2: Damaged
     CONSTRAINT CK_Copy_Status check ([Status] IN (-1,0,1,2)),
 	constraint FK_Copy_Book foreign key(BookId) references Book(BookId) on delete cascade
 )
@@ -108,5 +108,6 @@ insert into Account (Username, PasswordHash, [Role], StaffId)
 values 
 	('admin', '123', N'Admin', null), --username: admin, password: admin123
 	('librarian1', '123', N'Librarian', null)
+
 
 
