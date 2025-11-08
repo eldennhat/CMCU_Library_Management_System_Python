@@ -153,7 +153,7 @@ class LoginView(tk.Frame):
         role = self.role_var.get()
 
         if not username or not password or not role:
-            print("Thiếu thông tin , Vui lòng nhập đủ thông tin") #Báo lỗi bằg 1 tin nhắn
+            tkinter.messagebox.showinfo("Hệ thống","Thiếu thông tin , Vui lòng nhập đủ thông tin") #Báo lỗi bằg 1 tin nhắn
             return
 
         is_valid = check_login(username, password, role)
@@ -163,7 +163,7 @@ class LoginView(tk.Frame):
         if is_valid: #nếu chả về chuẩn check login sẽ true
             self.on_login_callback(role)
         else:
-            print("Đăng nhập thất bại! sai tên sai mk")
+            tkinter.messagebox.showinfo("Hệ thống","Đăng nhập thất bại! sai tên sai mk")
 
 
 
