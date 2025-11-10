@@ -74,7 +74,7 @@ class LibrarianMenu(tk.Frame):
         book_menubutton.config(menu=book_menu)
 
         # cho các label thả xuống vào cái menu đó
-        book_menu.add_command(label="Book Title Manager")
+        book_menu.add_command(label="Book Title Manager", show_book_manager_view)
         book_menu.add_command(label="Book Copy Manager")
 
 
@@ -98,7 +98,7 @@ class LibrarianMenu(tk.Frame):
             self.current_view.destroy()
         self.current_view = None
 
-    # --- CÁC HÀM DEMO ---
+    # --- CÁC HÀM  ---
     def show_welcome_view(self):
         self._clear_content_frame()
         self.current_view = ttk.Label(
@@ -107,6 +107,11 @@ class LibrarianMenu(tk.Frame):
             font=(FONT_PIXELS, 20, "bold")
         )
         self.current_view.pack(pady=50, padx=50)
+
+    def show_book_manager_view(self):
+       self._clear_content_frame()
+       self.current_view = BookManaFrame(self.content_frame)
+       self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
 
 
