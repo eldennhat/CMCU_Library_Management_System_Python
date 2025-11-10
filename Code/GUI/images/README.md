@@ -1,1 +1,0 @@
-Chứa các ảnh nhé
