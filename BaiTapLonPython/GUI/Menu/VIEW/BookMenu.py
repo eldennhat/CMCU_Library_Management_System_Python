@@ -100,11 +100,11 @@ class BookManaFrame(ttk.Frame):
         button_update.pack(side = "left", fill = "x", expand = True, padx = 5)
 
         button_remove = macButton(button_frame, text = "REMOVE", command = self.delete_book_from_db, font = self.pixel_font
-                                  ,cursor = "hand2", relief = "raised", bg = "#4169E1", fg = "white", activebackground = "#4169E1", borderwidth = 4)
+                                  ,cursor = "hand2", relief = "raised", bg = "#2930d8", fg = "white", activebackground = "#2930d8", borderwidth = 4)
         button_remove.pack(side = "left", fill = "x", expand = True, padx = 5)
 
         button_load = macButton(button_frame, text = "REFESH", command = self.clear_form, font = self.pixel_font,
-                                cursor = "hand2", relief = "raised", bg = "#F4A460", fg = "white", activebackground = "#F4A460", borderwidth = 4)
+                                cursor = "hand2", relief = "raised", bg = "#203020", fg = "white", activebackground = "#203020", borderwidth = 4)
         button_load.pack(side = "left", fill = "x", expand = True, padx = 5)
 
         # === 4. KHU VỰC HIỂN THỊ (BẢNG DỮ LIỆU) ===
@@ -212,7 +212,7 @@ class BookManaFrame(ttk.Frame):
 
         # Check
         if not isbn or not book_id or not isbn:
-            messagebox.showwarning("Thiếu thông tin", "Mã sách, ISBN và Tên sách là bắt buộc.")
+            messagebox.showwarning("Missing Infomation", "Book ID, ISBN và Title is required.")
             return
 
         #Tao tuple du lieu trung vs csdl
