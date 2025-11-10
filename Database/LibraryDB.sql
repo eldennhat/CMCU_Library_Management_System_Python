@@ -8,7 +8,7 @@ go
 -- Sách
 create table Book
 (
-	BookId int primary key,
+	BookId int identity(1,1) primary key,
 	ISBN varchar(255) not null unique,
 	Title nvarchar(255) not null,
 	CategoryName nvarchar(255) not null,
@@ -22,7 +22,7 @@ create table Book
 -- Bản sao sách
 create table BookCopy
 (
-	CopyId int primary key,
+	CopyId int identity(1,1) primary key,
 	BookId int not null,
 	Barcode varchar(255) not null unique, -- mã vạch
 	StorageNote nvarchar(255) null, -- kệ của sách
@@ -37,7 +37,7 @@ create table BookCopy
 -- Độc giả
 create table Reader
 (
-	ReaderId int primary key,
+	ReaderId int identity(1,1) primary key,
 	FullName nvarchar(255) not null,
 	Phone nvarchar(255) not null,
 	[Address] nvarchar(255) not null,
@@ -50,7 +50,7 @@ create table Reader
 -- Nhân viên
 create table Staff
 (
-	StaffId int primary key,
+	StaffId int identity(1,1) primary key,
 	FullName nvarchar(255) not null,
 	Phone nvarchar(255) not null,
 	DefaultStart time(0) null,  -- giờ vào ca mặc định (vd 08:00)
@@ -61,7 +61,7 @@ create table Staff
 -- Phiếu mượn
 create table Loan
 (
-	LoanId int primary key,
+	LoanId int identity(1,1) primary key,
 	ReaderId int not null,
 	StaffId int not null,
 	LoanDate date not null default cast(getdate() as date),
@@ -77,7 +77,7 @@ create table Loan
 -- Chi tiết phiếu mượn
 create table LoanDetail
 (
-	LoanDetailId int primary key,
+	LoanDetailId int identity(1,1) primary key,
 	LoanId int not null,
 	CopyId int not null,
 	ReturnedDate date null,
@@ -109,5 +109,8 @@ values
 	('admin', '123', N'Admin', null), --username: admin, password: admin123
 	('librarian1', '123', N'Librarian', null)
 
-
-
+insert into Book (ISBN, Title, CategoryName, BookAuthor, PublishYear)
+values 
+	('978-604-2-13519-1', N'Dế mèn phiêu lưu kí', N'Truyện dài', N'Tô Hoài', '2023'),
+	('978140882594', N'Happy Potter', N'Truyện dài', N'J.K Rowling', '1997'),
+	('30184934', N'Chưa có tên', N'Truyện ngắn', N'Chưa có tác giả', '2000')
