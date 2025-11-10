@@ -8,6 +8,7 @@ from GUI.Font.font import FONT_PIXELS
 from tkmacosx import Button as macButton
 
 from GUI.Menu.VIEW.BookMenu import BookManaFrame
+from GUI.Menu.VIEW.LoanMenu import LoanMenu
 from GUI.define import PATH_IMAGE
 
 
@@ -78,9 +79,7 @@ class LibrarianMenu(tk.Frame):
         book_menu.add_command(label="Book Title Manager", command=self.show_book_manager_view)
         book_menu.add_command(label="Book Copy Manager")
 
-
-        # --- Button 2: Quản lý Mượn/Trả ---
-        loan_button = macButton(menu_frame, text=" Loan Manager ")
+        loan_button = macButton(menu_frame, text="Loan Manager", padx=5, command=self.show_loan_manager_view)
         loan_button.pack(side='left', padx=30)
 
         #--- Button 3: Quản Lý Độc giả ---
@@ -114,7 +113,10 @@ class LibrarianMenu(tk.Frame):
         self.current_view = BookManaFrame(self.content_frame)
         self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
-
+    def show_loan_manager_view(self):
+        self._clear_content_frame()
+        self.current_view = LoanMenu(self.content_frame)
+        self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
 
     def logout(self):

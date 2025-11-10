@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 
 from GUI.Menu.VIEW.BookMenu import BookManaFrame
 from GUI.Menu.ADMIN.RegisterView import RegisterView
+from GUI.Menu.VIEW.LoanMenu import LoanMenu
 from GUI.define import PATH_IMAGE
 from tkmacosx import Button as macButton
 
@@ -83,7 +84,6 @@ class AdminMenu(tk.Frame):
         staff_menu.add_command(label = "Register for staff", command= self.show_create_staff_account_view)
         staff_menu.add_command(label = "Staff Manager")
 
-
         #--Menu 2: Quản lý sách (gồm đầu sách và bản sao)
         book_menubutton = ttk.Menubutton(menu_frame, text = "Book Manager ")
         book_menubutton.pack(side='left', padx=5)
@@ -95,6 +95,9 @@ class AdminMenu(tk.Frame):
         # cho các label thả xuống vào cái menu đó
         book_menu.add_command(label="Book Title Manager", command= self.show_book_manager_view)
         book_menu.add_command(label="Book Copy Manager")
+
+        loan_button = macButton(menu_frame, text="Loan Manager", padx=5, command=self.show_loan_manager_view)
+        loan_button.pack(side='left', padx=5)
 
         #Button hiện 1 frame thống kê:
         statistic_button = macButton(menu_frame, text = "Statistic")
@@ -108,8 +111,6 @@ class AdminMenu(tk.Frame):
         system_menubutton.config(menu=system_menu)
 
         system_menu.add_command(label="Log Out", command=self.logout)
-
-
 
     def _clear_content_frame(self):
         """Hàm hỗ trợ: Xóa mọi thứ đang có trong content_frame."""
@@ -155,6 +156,10 @@ class AdminMenu(tk.Frame):
         self.current_view = BookManaFrame(self.content_frame)
         self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
+    def show_loan_manager_view(self):
+        self._clear_content_frame()
+        self.current_view = LoanMenu(self.content_frame)
+        self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
     #HÀM ĐỂ ĐĂNG XUẤT
     def logout(self):
