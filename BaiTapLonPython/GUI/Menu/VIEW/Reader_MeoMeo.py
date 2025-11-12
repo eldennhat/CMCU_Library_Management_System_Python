@@ -1,397 +1,271 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import pymssql
-from pathlib import Path
-import pyodbc
+from GUI.Font.font import FONT_PIXELS
+from controller.view_controller.Reader_controller import get_all_readers, add_reader, update_reader, delete_reader, \
+    find_reader
+from tkmacosx import  Button as macButton
 
 # --- CÀI ĐẶT CHUNG ---
-APP_FONT = ("Press Start 2P", 10, "bold")
-APP_FONT_LARGE = ("Press Start 2P", 12, "bold")
-BG_COLOR = "#EEEEEE"  # Màu nền cho form
-WINDOW_BG = "#54C5E8"  # Màu nền trời xanh
-
-# --- KẾT NỐI DATABASE  --- thay đổi nếu cần
-SQL_SERVER_CONFIG = {
-    'server': 'Q407IQ\\SQLEXPRESS',
-    'database': 'LibraryDB',
-    # 'username': 'sa', # Đã bị xóa
-    # 'password': 'hoang2006@' # Đã bị xóa
-}
+APP_FONT = (FONT_PIXELS, 10)
+APP_FONT_LARGE = (FONT_PIXELS, 12, "bold")
+BG_COLOR = "#EEEEEE"
+WINDOW_BG = "#54C5E8"
 
 
-def get_connection():
-    try:
+# ========= VIẾT  DƯỚI DẠNG CLASS FRAME =========
+class ReaderManagementView(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
 
-        conn = pymssql.connect(
-            server=SQL_SERVER_CONFIG['server'],
-            database=SQL_SERVER_CONFIG['database']
-        )
-        return conn
-    except pymssql.Error as e:
-        messagebox.showerror("Conection error", f"Cannot connect to SQL server:\n{e}")
-        return None
+        # --- Style cho widget (chỉ dùng cho ttk) ---
 
 
-# --- HÀM HỖ TRỢ XỬ LÝ ENTRY ID ---
+        style = ttk.Style()
+        style.configure("TLabel", font=APP_FONT, background=BG_COLOR)
+        style.configure("TButton", font=APP_FONT)
+        style.configure("TEntry")
+        style.configure("TCombobox", font=APP_FONT)
+        style.configure("TTreeview.Heading", font=APP_FONT_LARGE)
+        style.configure("TTreeview", font=APP_FONT, rowheight=25)
+        style.configure("TLabelFrame", font=APP_FONT_LARGE, background=BG_COLOR)
+        style.configure("TLabelFrame.Label",
+                        font=APP_FONT_LARGE,
+                        background=BG_COLOR,
+                        foreground="#000000")
 
-def set_entry_reader_id_state(state):
-    """Đặt trạng thái của entry_reader_id (normal, readonly, disabled)"""
-    entry_reader_id.config(state=state)
-
-
-def clear_and_set_reader_id(reader_id_value):
-    """Xóa, chèn giá trị ID và khóa lại entry_reader_id"""
-    set_entry_reader_id_state('normal')
-    entry_reader_id.delete(0, tk.END)
-    entry_reader_id.insert(0, reader_id_value)
-    set_entry_reader_id_state('readonly')
-
-
-# --- CÁC HÀM XỬ LÝ SỰ KIỆN (DATABASE) ---
-
-def load_all_readers():
-    """Tải tất cả độc giả lên Treeview."""
-    # Xóa dữ liệu cũ
-    for item in tree_readers.get_children():
-        tree_readers.delete(item)
-
-    try:
-        conn = get_connection()
-        if not conn: return
-
-        cursor = conn.cursor()
-        sql = "SELECT ReaderId, FullName, Phone, Address FROM Reader"
-        cursor.execute(sql)
-
-        rows = cursor.fetchall()
-        for row in rows:
-            tree_readers.insert("", tk.END, values=row)
-
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        messagebox.showerror("Error", f"Cannot load Readers list:\n{e}")
+        self.create_widgets()
+        self.load_all_readers()
 
 
-def add_reader():
-    # Lấy dữ liệu từ các ô entry trong form "Details"
-    full_name = entry_full_name.get()
-    phone = entry_phone.get()
-    address = entry_address.get()
+    def create_widgets(self):
+            # === Frame chính chứa toàn bộ nội dung ===
+            main_frame = tk.Frame(self, bg=BG_COLOR, bd=2)
+            main_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
-    if not full_name:
-        messagebox.showerror("Error", "Full Name is required!")
-        return
+            
+            # Pack các nút bấm xuống DƯỚI CÙNG (BOTTOM) trước tiên
+            frame_buttons = tk.Frame(main_frame, bg=BG_COLOR)
+            frame_buttons.pack(fill="x", padx=10, pady=5, side="bottom")
 
-    try:
-        conn = get_connection()
-        if not conn: return
-        cursor = conn.cursor()
+            self.btn_add = macButton(
+                frame_buttons, text="ADD", font=APP_FONT_LARGE,
+                bg="#4CAF50", fg="white",
+                command=self.on_add_reader_click,
+                borderwidth=4, relief="raised", activebackground="#4CAF50",
+            )
+            self.btn_add.pack(side="left", padx=10, pady=10, fill="x", expand=True)
 
-        sql = """INSERT INTO Reader (FullName, Phone, Address)
-                 VALUES (%s, %s, %s)"""
+            self.btn_update = macButton(
+                frame_buttons, text="UPDATE", font=APP_FONT_LARGE,
+                bg="#F44336", fg="white",
+                command=self.on_update_reader_click,
+                borderwidth=4, relief="raised", activebackground="#F44336",
+            )
+            self.btn_update.pack(side="left", padx=10, pady=10, fill="x", expand=True)
 
-        cursor.execute(sql, (full_name, phone, address))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        messagebox.showinfo("Succes", "Reader added successfully!")
+            self.btn_remove = macButton(
+                frame_buttons, text="REMOVE", font=APP_FONT_LARGE,
+                bg="#2196F3", fg="white",
+                command=self.on_delete_reader_click,
+                borderwidth=4, relief="raised", activebackground="#2196F3",
+            )
+            self.btn_remove.pack(side="left", padx=10, pady=10, fill="x", expand=True)
 
-        clear_form_and_reload()  # Gọi hàm mới để xóa form và tải lại bảng
+            self.btn_load = macButton(
+                frame_buttons, text="REFRESH", font=APP_FONT_LARGE,
+                bg="#FF9800", fg="white",
+                command=self.clear_form_and_reload,
+                borderwidth=4, relief="raised",activebackground="#FF9800",
+            )
+            self.btn_load.pack(side="left", padx=10, pady=10, fill="x", expand=True)
 
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
+            # Pack khung Search lên TRÊN CÙNG (TOP)
+            frame_search = tk.LabelFrame(main_frame, text="Search Reader")
+            frame_search.pack(fill="x", padx=10, pady=10, side="top")
 
+            lbl_search = tk.LabelFrame(frame_search, text="Enter FullName/Phone:")
+            lbl_search.pack(side="left", padx=(0, 5))
+            self.entry_reader_name_phone_search = tk.Entry(frame_search, width=20)
+            self.entry_reader_name_phone_search.pack(side="left", fill="x", expand=True, padx=5)
+            self.btn_search = macButton(
+                frame_search, text="Find", command=self.on_find_reader_click,
+                font=APP_FONT, borderwidth=4, relief="raised"
+            )
+            self.btn_search.pack(side= "left", padx=(10, 0))
 
-def update_reader():
-    # Lấy dữ liệu từ các ô entry trong form "Details"
-    reader_id = entry_reader_id.get()
-    full_name = entry_full_name.get()
-    phone = entry_phone.get()
-    address = entry_address.get()
+            # Pack khung Details lên TRÊN (nằm dưới Search)
+            frame_details = tk.LabelFrame(main_frame, text="Reader Details")
+            frame_details.pack(fill="x", padx=10, pady=5, side="top")
 
-    if not reader_id:
-        messagebox.showerror("Error", "To update, choose a Reader ID!")
-        return
+            # Code grid bên trong frame_details
+            frame_details.columnconfigure(1, weight=1)
+            frame_details.columnconfigure(3, weight=1)
 
-    try:
-        conn = get_connection()
-        if not conn: return
-        cursor = conn.cursor()
-        sql = """UPDATE Reader
-                 SET FullName=%s,
-                     Phone=%s,
-                     Address=%s
-                 WHERE ReaderID = %s"""
-        # Sử dụng các widget mới
-        cursor.execute(sql, (full_name, phone, address, reader_id))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        messagebox.showinfo("Success", "Reader updated successfully!")
+            #Label id
+            lbl_reader_id = tk.Label(frame_details, text="Reader ID:", font=APP_FONT)
+            lbl_reader_id.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+            self.entry_reader_id = tk.Entry(frame_details, state='readonly')
+            self.entry_reader_id.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
-        clear_form_and_reload()  # Gọi hàm mới để xóa form và tải lại bảng
+            #Label Tên
+            lbl_full_name = tk.Label(frame_details, text="Full Name:" ,font=APP_FONT)
+            lbl_full_name.grid(row=0, column=2, padx=5, pady=5, sticky="w")
+            self.entry_full_name = tk.Entry(frame_details)
+            self.entry_full_name.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
 
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
+            #Label SĐT
+            lbl_phone = tk.Label(frame_details, text="Phone:", font=APP_FONT)
+            lbl_phone.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+            self.entry_phone = tk.Entry(frame_details)
+            self.entry_phone.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
-
-def delete_reader():
-    # Lấy ID từ ô "Reader ID" trong form "Details"
-    reader_id = entry_reader_id.get()
-
-    if not reader_id:
-        messagebox.showerror("Error", "To delete, choose a Reader ID!")
-        return
-
-    if not messagebox.askyesno("Confirmation", f"Do you want to delete Reader ID: {reader_id}?"):
-        return
-
-    try:
-        conn = get_connection()
-        if not conn: return
-        cursor = conn.cursor()
-        sql = "DELETE FROM Reader WHERE ReaderID=%s"
-        # Sử dụng widget mới
-        cursor.execute(sql, (reader_id,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        messagebox.showinfo("Success", "Reader deleted successfully!")
-
-        clear_form_and_reload()  # Gọi hàm mới để xóa form và tải lại bảng
-
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
+            #Label Address
+            lbl_address = tk.Label(frame_details, text="Address:", font=APP_FONT)
+            lbl_address.grid(row=1, column=2, padx=5, pady=5, sticky="w")
+            self.entry_address = tk.Entry(frame_details)
+            self.entry_address.grid(row=1, column=3, padx=5, pady=5, sticky="ew")
 
 
-def find_reader():
-    """Tìm độc giả bằng FullName/Phone từ ô TÌM KIẾM và điền vào form."""
-    # Lấy dữ liệu từ ô TÌM KIẾM (Search)
-    search_term = entry_reader_name_phone_search.get().strip()
+            # Pack Bảng vào cuối cùng.
+            # Nó sẽ tự động lấp đầy không gian còn lại ở giữa.
+            frame_tree = tk.Frame(main_frame)
+            frame_tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-    if not search_term:
-        messagebox.showerror("Error", "Insert FullName or Phone to begin searching.")
-        return
+            # (Code Treeview bên trong frame_tree giữ nguyên)
+            scrollbar = ttk.Scrollbar(frame_tree, orient= "vertical")
+            columns = ("ReaderID", "FullName", "Phone", "Address")
+            self.tree_readers = ttk.Treeview(
+                frame_tree, columns=columns, show="headings",
+                yscrollcommand=scrollbar.set
+            )
+            self.tree_readers.heading("ReaderID", text="Reader ID")
+            self.tree_readers.heading("FullName", text="Full Name")
+            self.tree_readers.heading("Phone", text="Phone")
+            self.tree_readers.heading("Address", text="Address")
+            self.tree_readers.column("ReaderID", width=100, anchor="center")
+            self.tree_readers.column("FullName", width=250)
+            self.tree_readers.column("Phone", width=150)
+            self.tree_readers.column("Address", width=250)
+            scrollbar.config(command=self.tree_readers.yview)
+            scrollbar.pack(side="right", fill= "y")
+            self.tree_readers.pack(side="left", fill="both", expand=True)
+            self.tree_readers.bind("<<TreeviewSelect>>", self.on_tree_select)
 
-    try:
-        conn = get_connection()
-        if not conn: return
-        cursor = conn.cursor()
 
-        # Cải tiến SQL để tìm kiếm theo cả FullName hoặc Phone
-        sql = """
-              SELECT TOP 1 ReaderID, FullName, Phone, Address
-              FROM Reader
-              WHERE FullName LIKE %s
-                 OR Phone LIKE %s
-              """
-        # Thêm '%' để tìm kiếm tương đối
-        search_pattern = f'%{search_term}%'
-        cursor.execute(sql, (search_pattern, search_pattern))
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
 
-        if row:
-            # Xóa form cũ và điền thông tin vào entry_reader_id
-            clear_form()
-            clear_and_set_reader_id(row[0])
+    # ========== CÁC HÀM TẠO COMMAND CHO CÁC NÚT BẤM ================
+    def set_entry_reader_id_state(self, state):
+        self.entry_reader_id.config(state=state)
 
-            # Điền thông tin vào các Entry khác
-            entry_full_name.insert(0, row[1])
-            entry_phone.insert(0, row[2] if row[2] else "")
-            entry_address.insert(0, row[3] if row[3] else "")
+    def clear_and_set_reader_id(self, reader_id_value):
+        self.set_entry_reader_id_state('normal')
+        self.entry_reader_id.delete(0, tk.END)
+        self.entry_reader_id.insert(0, reader_id_value)
+        self.set_entry_reader_id_state('readonly')
 
-            messagebox.showinfo("Success", f"Reader ID: {row[0]} found")
+    def clear_form(self):
+        self.set_entry_reader_id_state('normal')
+        self.entry_reader_id.delete(0, tk.END)
+        self.set_entry_reader_id_state('readonly')
+        self.entry_full_name.delete(0, tk.END)
+        self.entry_phone.delete(0, tk.END)
+        self.entry_address.delete(0, tk.END)
+        self.entry_reader_name_phone_search.delete(0, tk.END)
+        if self.tree_readers.selection():
+            try:
+                self.tree_readers.selection_remove(self.tree_readers.selection()[0])
+            except IndexError:
+                pass
+        print("Form refreshed. All fields cleared.")
+
+    def on_tree_select(self, event):
+        try:
+            selected_item = self.tree_readers.selection()[0]
+            values = self.tree_readers.item(selected_item, 'values')
+            self.clear_form()
+            self.clear_and_set_reader_id(values[0])
+            self.entry_full_name.insert(0, values[1])
+            self.entry_phone.insert(0, values[2] if values[2] else "")
+            self.entry_address.insert(0, values[3] if values[3] else "")
+        except IndexError:
+            pass
+
+    def clear_form_and_reload(self):
+        print("Refreshing form and data...")
+        self.clear_form()
+        self.load_all_readers()
+
+    # Hàm gọi Controller
+    def load_all_readers(self):
+        for item in self.tree_readers.get_children():
+            self.tree_readers.delete(item)
+        rows = get_all_readers()
+        if rows:
+            for row in rows:
+                self.tree_readers.insert("", tk.END, values=row)
+
+    def on_add_reader_click(self):
+        full_name = self.entry_full_name.get()
+        phone = self.entry_phone.get()
+        address = self.entry_address.get()
+        if not full_name:
+            messagebox.showerror("Error", "Must have Name", parent=self)
+            return
+        success = add_reader(full_name, phone, address)
+        if success:
+            messagebox.showinfo("Success", "Add Reader success", parent=self)
+            self.clear_form_and_reload()
         else:
-            messagebox.showinfo("Not found", "FullName or Phone not found.")
+            messagebox.showerror("Error Database", "Can not add reader", parent=self)
 
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
+    def on_update_reader_click(self):
+        reader_id = self.entry_reader_id.get()
+        full_name = self.entry_full_name.get()
+        phone = self.entry_phone.get()
+        address = self.entry_address.get()
+        if not reader_id:
+            messagebox.showerror("Lỗi", "Vui lòng chọn một độc giả từ bảng để cập nhật.", parent=self)
+            return
+        success = update_reader(reader_id, full_name, phone, address)
+        if success:
+            messagebox.showinfo("Thành công", "Cập nhật độc giả thành công!", parent=self)
+            self.clear_form_and_reload()
+        else:
+            messagebox.showerror("Lỗi CSDL", "Không thể cập nhật độc giả.", parent=self)
 
+    def on_delete_reader_click(self):
+        reader_id = self.entry_reader_id.get()
+        if not reader_id:
+            messagebox.showerror("Lỗi", "Vui lòng chọn một độc giả từ bảng để xóa.", parent=self)
+            return
+        if not messagebox.askyesno("Xác nhận", f"Bạn có chắc muốn xóa Độc giả ID: {reader_id}?", parent=self):
+            return
+        success = delete_reader(reader_id)
+        if success:
+            messagebox.showinfo("Thành công", "Xóa độc giả thành công!", parent=self)
+            self.clear_form_and_reload()
+        else:
+            messagebox.showerror("Lỗi CSDL", "Không thể xóa độc giả.\nLưu ý: Không thể xóa độc giả đang có phiếu mượn.",
+                                 parent=self)
 
-def clear_form():
-    """Xóa trắng các ô nhập liệu trong form "Details"."""
-    set_entry_reader_id_state('normal')  # Phải mở khóa mới xóa được
-    entry_reader_id.delete(0, tk.END)
-    set_entry_reader_id_state('readonly')  # Khóa lại
+    def on_find_reader_click(self):
+        search_term = self.entry_reader_name_phone_search.get().strip()
+        if not search_term:
+            messagebox.showerror("Lỗi", "Vui lòng nhập Tên hoặc SĐT để tìm.", parent=self)
+            return
+        row = find_reader(search_term)
+        if row:
+            self.clear_form()
+            self.clear_and_set_reader_id(row[0])
+            self.entry_full_name.insert(0, row[1])
+            self.entry_phone.insert(0, row[2] if row[2] else "")
+            self.entry_address.insert(0, row[3] if row[3] else "")
+            for item in self.tree_readers.get_children():
+                if str(self.tree_readers.item(item, 'values')[0]) == str(row[0]):
+                    self.tree_readers.selection_set(item)
+                    self.tree_readers.focus(item)
+                    self.tree_readers.see(item)
+                    break
+        else:
+            messagebox.showinfo("Không tìm thấy", "Không tìm thấy độc giả nào khớp.", parent=self)
 
-    entry_full_name.delete(0, tk.END)
-    entry_phone.delete(0, tk.END)
-    entry_address.delete(0, tk.END)
-    entry_reader_name_phone_search.delete(0, tk.END)  # Xóa ô tìm kiếm
-
-    # Bỏ chọn trong treeview
-    if tree_readers.selection():
-        tree_readers.selection_remove(tree_readers.selection()[0])
-    print("Form refreshed. All fields cleared.")
-
-
-def on_tree_select(event):
-    """Điền dữ liệu vào form "Details" khi nhấp vào bảng."""
-    try:
-        selected_item = tree_readers.selection()[0]
-        values = tree_readers.item(selected_item, 'values')
-
-        # Xóa form cũ và điền ID vào entry_reader_id (chỉ có thể làm khi mở khóa)
-        clear_form()
-        clear_and_set_reader_id(values[0])
-
-        # Điền dữ liệu mới vào các Entry khác
-        entry_full_name.insert(0, values[1])
-        entry_phone.insert(0, values[2] if values[2] else "")
-        entry_address.insert(0, values[3] if values[3] else "")
-
-    except IndexError:
-        pass
-
-
-# 🆕 HÀM MỚI KẾT HỢP CẢ CLEAR VÀ RELOAD
-def clear_form_and_reload():
-    """Xóa form và tải lại dữ liệu từ database."""
-    print("Refreshing form and data...")
-    clear_form()  # Xóa các ô nhập liệu
-    load_all_readers()  # Tải lại bảng
-
-
-# --- TẠO GIAO DIỆN ---
-
-window = tk.Tk()
-window.title("Reader Management Menu")
-window.geometry("800x650")
-window.configure(bg=WINDOW_BG)
-window.resizable(False, False)
-
-# --- Style cho widget ---
-style = ttk.Style()
-style.configure("TLabel", font=APP_FONT, background=BG_COLOR)
-style.configure("TButton", font=APP_FONT)
-style.configure("TEntry")
-style.configure("TCombobox", font=APP_FONT)
-style.configure("TTreeview.Heading", font=APP_FONT_LARGE)
-style.configure("TTreeview", font=APP_FONT, rowheight=25)
-style.configure("TLabelFrame", font=APP_FONT_LARGE, background=BG_COLOR)
-style.configure("TLabelFrame.Label",
-                font=APP_FONT_LARGE,
-                background=BG_COLOR,
-                foreground="#000000") # Thêm foreground để đảm bảo màu chữ tiêu đề
-
-style.configure("TLabelFrame", background=BG_COLOR)
-# --- Tabs  ---
-tab_control = ttk.Notebook(window)
-tab_reader = ttk.Frame(tab_control, padding=10)  # Tab chính
-tab_control.add(tab_reader, text='Reader Manager')
-tab_control.pack(expand=1, fill="both")
-
-# === Frame chính chứa toàn bộ nội dung ===
-main_frame = tk.Frame(tab_reader, bg=BG_COLOR, bd=2, relief=tk.RIDGE)
-main_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-# --- 1. Khung Search Reader ---
-frame_search = ttk.LabelFrame(main_frame, text="Search Reader", padding=(10, 5))
-frame_search.pack(fill="x", padx=10, pady=10)
-
-lbl_search = ttk.Label(frame_search, text="Enter FullName/Phone:")
-lbl_search.pack(side=tk.LEFT, padx=(0, 5))
-
-entry_reader_name_phone_search = ttk.Entry(frame_search, width=20)
-entry_reader_name_phone_search.pack(side=tk.LEFT, fill="x", expand=True, padx=5)
-
-btn_search = ttk.Button(frame_search, text="Find", command=find_reader)
-btn_search.pack(side=tk.LEFT, padx=(10, 0))
-# --- 2. Khung Reader Details ---
-frame_details = ttk.LabelFrame(main_frame, text="Reader Details", padding=10)
-frame_details.pack(fill="x", padx=10, pady=5)
-
-frame_details.columnconfigure(1, weight=1)
-frame_details.columnconfigure(3, weight=1)
-
-# Hàng 1: Reader ID & Full Name
-lbl_reader_id = ttk.Label(frame_details, text="Reader ID:")
-lbl_reader_id.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-entry_reader_id = ttk.Entry(frame_details, state='readonly')  # Đặt state='readonly'
-entry_reader_id.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-
-lbl_full_name = ttk.Label(frame_details, text="Full Name:")
-lbl_full_name.grid(row=0, column=2, padx=5, pady=5, sticky="w")
-entry_full_name = ttk.Entry(frame_details)
-entry_full_name.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
-
-# Hàng 2: Phone & Address
-lbl_phone = ttk.Label(frame_details, text="Phone:")
-lbl_phone.grid(row=1, column=0, padx=5, pady=5, sticky="w")
-entry_phone = ttk.Entry(frame_details)
-entry_phone.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-
-lbl_address = ttk.Label(frame_details, text="Address:")
-lbl_address.grid(row=1, column=2, padx=5, pady=5, sticky="w")
-entry_address = ttk.Entry(frame_details)
-entry_address.grid(row=1, column=3, padx=5, pady=5, sticky="ew")
-
-# --- 3. Bảng danh sách (Treeview) ---
-frame_tree = tk.Frame(main_frame)
-frame_tree.pack(fill="both", expand=True, padx=10, pady=10)
-
-scrollbar = ttk.Scrollbar(frame_tree, orient=tk.VERTICAL)
-columns = ("ReaderID", "FullName", "Phone", "Address")
-tree_readers = ttk.Treeview(
-    frame_tree,
-    columns=columns,
-    show="headings",
-    yscrollcommand=scrollbar.set
-)
-
-# Đặt tiêu đề cột
-tree_readers.heading("ReaderID", text="Reader ID")
-tree_readers.heading("FullName", text="Full Name")
-tree_readers.heading("Phone", text="Phone")
-tree_readers.heading("Address", text="Address")
-
-# Căn chỉnh độ rộng cột
-tree_readers.column("ReaderID", width=100, anchor="center")
-tree_readers.column("FullName", width=250)
-tree_readers.column("Phone", width=150)
-tree_readers.column("Address", width=250)
-
-scrollbar.config(command=tree_readers.yview)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-tree_readers.pack(side=tk.LEFT, fill="both", expand=True)
-
-# Gán sự kiện khi nhấp vào bảng
-tree_readers.bind("<<TreeviewSelect>>", on_tree_select)
-
-# --- 4. Khung nút bấm  ---
-frame_buttons = tk.Frame(main_frame, bg=BG_COLOR)
-frame_buttons.pack(fill="x", padx=10, pady=5)
-
-# Gắn các hàm CẬP NHẬT vào các nút
-btn_add = tk.Button(
-    frame_buttons, text="ADD", font=APP_FONT_LARGE,
-    bg="#4CAF50", fg="white", width=6, command=add_reader
-)
-btn_add.pack(side=tk.LEFT, padx=10, pady=10, fill="x", expand=True)
-
-btn_update = tk.Button(
-    frame_buttons, text="UPDATE", font=APP_FONT_LARGE,
-    bg="#F44336", fg="white", width=6, command=update_reader
-)
-btn_update.pack(side=tk.LEFT, padx=10, pady=10, fill="x", expand=True)
-
-btn_remove = tk.Button(
-    frame_buttons, text="REMOVE", font=APP_FONT_LARGE,
-    bg="#2196F3", fg="white", width=6, command=delete_reader
-)
-btn_remove.pack(side=tk.LEFT, padx=10, pady=10, fill="x", expand=True)
-
-btn_load = tk.Button(
-    frame_buttons, text="REFRESH", font=APP_FONT_LARGE,
-    bg="#FF9800", fg="white", width=6, command=clear_form_and_reload
-)
-btn_load.pack(side=tk.LEFT, padx=10, pady=10, fill="x", expand=True)
-
-# --- Tải dữ liệu ban đầu ---
-load_all_readers()
-
-# --- Chạy cửa sổ ---
-window.mainloop()
