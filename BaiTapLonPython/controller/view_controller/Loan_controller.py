@@ -1,12 +1,11 @@
 import pymssql
 from database.db_connector import get_db_connection
 
-
+#======HÀM TẠO PHIẾU MƯỢN========
 def create_new_loan(reader_id, staff_id, due_date, list_of_copy_ids):
+    #Tham số ID độc giả, ID nhân viên, hạn trả sách, và list các copyID
     """
     Tạo phiếu mượn mới và cập nhật trạng thái sách.
-
-    Args:
         reader_id (int): ID của độc giả
         staff_id (int): ID của nhân viên (người cho mượn)
         due_date (str): Ngày hẹn trả (YYYY-MM-DD HH:MI:SS)
@@ -42,7 +41,7 @@ def create_new_loan(reader_id, staff_id, due_date, list_of_copy_ids):
                      """
         cursor.execute(loan_query, (reader_id, staff_id, due_date))
 
-        # 3. LẤY LoanId VỪA MỚI ĐƯỢC TẠO
+        # 3. LẤY LoanId VỪA MỚI ĐƯỢC Tăng
         cursor.execute("SELECT SCOPE_IDENTITY()")
         new_loan_id = cursor.fetchone()[0]
 
@@ -52,16 +51,16 @@ def create_new_loan(reader_id, staff_id, due_date, list_of_copy_ids):
 
         # 4. THÊM TỪNG CUỐN SÁCH vào LoanDetail VÀ CẬP NHẬT BookCopy
         for copy_id in list_of_copy_ids:
-            # 4a. Lấy BookMoney để tính Deposit
+            # 4a. Lấy BookMoney để tính tiền cọc
             cursor.execute("SELECT BookMoney FROM BookCopy WHERE CopyId = %s", (copy_id,))
-            book_money_result = cursor.fetchone()
+            book_money_result = cursor.fetchone() #Để tính tiền cọc
 
             if not book_money_result or book_money_result[0] is None:
                 book_money = 0
             else:
                 book_money = book_money_result[0]
 
-            deposit = book_money * 2  # Deposit = BookMoney * 2
+            deposit = book_money * 2  # Deposit = BookMoney * 2 tiền cọc
 
             # 4b. Thêm vào LoanDetail (ReturnedDate = NULL ban đầu)
             detail_query = """
@@ -112,31 +111,6 @@ def return_book_copy(copy_id, returned_datetime_str):
     cursor = conn.cursor()
 
     try:
-        # 1. KIỂM TRA XEM SÁCH CÓ ĐANG ĐƯỢC MƯỢN KHÔNG (Status = 1)
-        cursor.execute("SELECT Status FROM BookCopy WHERE CopyId = %s", (copy_id,))
-        result = cursor.fetchone()
-
-        if not result:
-            conn.rollback()
-            return (False, f"Không tìm thấy sách với CopyId: {copy_id}")
-
-        if result[0] != 1:  # Status phải = 1 (OnLoan)
-            conn.rollback()
-            return (False, f"Sách CopyId {copy_id} không đang được mượn (Status: {result[0]})")
-
-        # 2. KIỂM TRA XEM CÓ LOANDETAIL NÀO CHƯA TRẢ KHÔNG
-        cursor.execute("""
-                       SELECT LoanDetailId
-                       FROM LoanDetail
-                       WHERE CopyId = %s
-                         AND ReturnedDate IS NULL
-                       """, (copy_id,))
-
-        loan_detail_result = cursor.fetchone()
-        if not loan_detail_result:
-            conn.rollback()
-            return (False, f"Không tìm thấy phiếu mượn chưa trả cho sách CopyId: {copy_id}")
-
         # 3. CẬP NHẬT NGÀY TRẢ SÁCH (ReturnedDate)
         # Trigger sẽ tự động tính Fine dựa trên ReturnedDate
         update_detail_query = """
@@ -183,4 +157,62 @@ def return_book_copy(copy_id, returned_datetime_str):
         if cursor:
             cursor.close()
         if conn:
+            conn.close()
+
+
+# ========HÀM  ĐỂ LẤY CHI TIẾT CHO LOAN DETAILS VIEW =======
+def get_loan_details_by_id(loan_id):
+    """
+    Lấy tất cả thông tin chi tiết của MỘT phiếu mượn.
+    Trả về 2 phần: (thông_tin_phiếu, danh_sách_sách)
+    """
+    conn = get_db_connection()
+    if conn is None:
+        return (None, None)  # Trả về 2 giá trị None nếu lỗi
+
+    cursor = conn.cursor(as_dict=True)  # Dùng as_dict=True cho dễ
+
+    loan_info = None #Chứa tất cả thông tin
+    book_list = [] #chứa các sách mượn
+
+    try:
+        # Query 1: Lấy thông tin chung của Phiếu Mượn
+        query_info = """
+                     SELECT l.LoanId, \
+                            l.LoanDate, \
+                            l.DueDate, \
+                            r.FullName AS ReaderName, \
+                            r.Phone    AS ReaderPhone, \
+                            s.FullName AS StaffName
+                     FROM Loan AS l
+                              JOIN Reader AS r ON l.ReaderId = r.ReaderId
+                              JOIN Staff AS s ON l.StaffId = s.StaffId
+                     WHERE l.LoanId = %s \
+                     """
+        cursor.execute(query_info, (loan_id,))
+        loan_info = cursor.fetchone()  # Chỉ có 1 hàng
+
+        # Query 2: Lấy danh sách Sách trong phiếu mượn đó
+        query_books = """
+                      SELECT d.CopyId, \
+                             b.Title AS BookTitle, \
+                             d.ReturnedDate, \
+                             d.Deposit,\
+                             d.Fine
+                      FROM LoanDetail AS d
+                               JOIN BookCopy AS c ON d.CopyId = c.CopyId
+                               JOIN Book AS b ON c.BookId = b.BookId
+                      WHERE d.LoanId = %s \
+                      """
+        cursor.execute(query_books, (loan_id,))
+        book_list = cursor.fetchall()  # Có thể có nhiều hàng
+
+        return (loan_info, book_list)
+
+    except pymssql.Error as e:
+        print(f"Lỗi SQL (get_loan_details_by_id): {e}")
+        return (None, None)
+    finally:
+        if conn:
+            cursor.close()
             conn.close()
