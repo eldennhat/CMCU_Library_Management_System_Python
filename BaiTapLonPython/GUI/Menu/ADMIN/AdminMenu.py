@@ -165,4 +165,14 @@ class AdminMenu(tk.Frame):
     def logout(self):
         self.parent.show_login_view()
 
+    #HÀM ĐỂ DISPLAY STAFF MANAGEMENT
+    def show_staff_mana_view(self):
+        """
+        update StaffMana vao content_frame
+        """
+        self._clear_content_frame()  #delete frame cũ
+        self.current_view = StaffManaFrame(self.content_frame) #create a new frame
+        self.current_view.pack(fill = 'both', expand = True, padx = 10, pady = 10)
+
+
 
