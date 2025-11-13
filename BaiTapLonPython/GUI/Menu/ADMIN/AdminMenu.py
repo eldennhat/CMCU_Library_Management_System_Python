@@ -161,10 +161,6 @@ class AdminMenu(tk.Frame):
         self.current_view = LoanMenu(self.content_frame)
         self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
-    #HÀM ĐỂ ĐĂNG XUẤT
-    def logout(self):
-        self.parent.show_login_view()
-
     #HÀM ĐỂ DISPLAY STAFF MANAGEMENT
     def show_staff_mana_view(self):
         """
@@ -173,6 +169,9 @@ class AdminMenu(tk.Frame):
         self._clear_content_frame()  #delete frame cũ
         self.current_view = StaffManaFrame(self.content_frame) #create a new frame
         self.current_view.pack(fill = 'both', expand = True, padx = 10, pady = 10)
-
+        
+    #HÀM ĐỂ ĐĂNG XUẤT
+    def logout(self):
+        self.parent.show_login_view()
 
 
