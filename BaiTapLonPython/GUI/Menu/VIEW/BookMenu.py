@@ -103,7 +103,7 @@ class BookManaFrame(ttk.Frame):
                                   ,cursor = "hand2", relief = "raised", bg = "#2930d8", fg = "white", activebackground = "#2930d8", borderwidth = 4)
         button_remove.pack(side = "left", fill = "x", expand = True, padx = 5)
 
-        button_load = macButton(button_frame, text = "REFESH", command = self.clear_form, font = self.pixel_font,
+        button_load = macButton(button_frame, text = "REFRESH", command = self.clear_form, font = self.pixel_font,
                                 cursor = "hand2", relief = "raised", bg = "#203020", fg = "white", activebackground = "#203020", borderwidth = 4)
         button_load.pack(side = "left", fill = "x", expand = True, padx = 5)
 
