@@ -88,7 +88,7 @@ def add_book_copy():
     barcode = entry_barcode.get()
     book_money_text = entry_price.get()
 
-    # --- Kiểm tra dữ liệu (từ code gốc) ---
+    # --- Kiểm tra dữ liệu ---
     if not book_id or not status:
         messagebox.showerror("Error", "Book ID and Status are required.")
         return
@@ -266,7 +266,7 @@ style.configure("TTreeview", font=APP_FONT, rowheight=25)
 style.configure("TLabelFrame", font=APP_FONT_LARGE, background=BG_COLOR)
 style.configure("TLabelFrame.Label", font=APP_FONT_LARGE, background=BG_COLOR)
 
-# --- Tabs (Giống trong ảnh) ---
+# --- Tabs  ---
 tab_control = ttk.Notebook(window)
 # Bạn có thể tạo các tab khác ở đây
 tab_book_copy = ttk.Frame(tab_control, padding=10)  # Tab chính
@@ -374,7 +374,7 @@ tree_copies.pack(side=tk.LEFT, fill="both", expand=True)
 
 tree_copies.bind("<<TreeviewSelect>>", on_tree_select)
 
-# --- 4. Khung nút bấm (Giống hệt ảnh) ---
+# --- 4. Khung nút bấm  ---
 frame_buttons = tk.Frame(main_frame, bg=BG_COLOR)
 frame_buttons.pack(fill="x", padx=10, pady=5)
 
@@ -407,4 +407,5 @@ combo_book_id['values'] = fetch_book_ids()
 search_or_load_all_copies()
 
 # --- Chạy cửa sổ ---
+
 window.mainloop()
