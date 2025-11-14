@@ -55,7 +55,7 @@ def delete_book_copy(copy_id):
         conn.commit()
         return True
     except pymssql.Error as e:
-        print(f"Lỗi SQL (delete_Copy): {e}")
+        messagebox.showwarning(f"Phải xoá ở phần Phiếu mượn trước, đảm bảo không có copy ID nào đang ở trong phiếu mượn")
         conn.rollback()
         return False
     finally:
