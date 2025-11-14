@@ -101,14 +101,14 @@ def delete_reader(reader_id):
 
 
 def find_reader(search_term):
-    """Tìm 1 độc giả bằng FullName hoặc Phone."""
+    #Tìm 1 độc giả bằng FullName hoặc Phone."""
     conn = get_db_connection()
     if not conn:
         return None
 
     cursor = conn.cursor()
     sql = """
-          SELECT TOP 1 ReaderId, FullName, Phone, Address
+          SELECT ReaderId, FullName, Phone, Address
           FROM Reader
           WHERE FullName LIKE %s \
              OR Phone LIKE %s
@@ -117,8 +117,8 @@ def find_reader(search_term):
 
     try:
         cursor.execute(sql, (search_pattern, search_pattern))
-        row = cursor.fetchone()
-        return row  # Trả về (None) nếu không tìm thấy
+        row = cursor.fetchall()
+        return row
     except pymssql.Error as e:
         print(f"Lỗi SQL (find_reader): {e}")
         return None
