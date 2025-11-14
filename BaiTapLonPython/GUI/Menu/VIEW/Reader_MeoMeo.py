@@ -180,10 +180,22 @@ class ReaderManagementView(tk.Frame):
         self.load_all_readers()
 
     # Hàm gọi Controller
-    def load_all_readers(self):
+    def load_all_readers(self, reader_list=None):
+        #
+        # Xóa Treeview và tải dữ liệu mới vào.
+        # Nếu 'reader_list' được cung cấp (từ tìm kiếm), tải list đó.
+        # Nếu không, gọi CSDL để lấy tất cả.
+        #
         for item in self.tree_readers.get_children():
             self.tree_readers.delete(item)
-        rows = get_all_readers()
+
+        if reader_list is None:
+            # Nếu không phải tìm kiếm, lấy tất cả
+            rows = get_all_readers()
+        else:
+            # Nếu là tìm kiếm, dùng list đã cho
+            rows = reader_list
+
         if rows:
             for row in rows:
                 self.tree_readers.insert("", tk.END, values=row)
@@ -237,19 +249,18 @@ class ReaderManagementView(tk.Frame):
         if not search_term:
             messagebox.showerror("Error", "Please enter name or Phone to search", parent=self)
             return
-        row = find_reader(search_term)
-        if row:
-            self.clear_form()
-            self.clear_and_set_reader_id(row[0])
-            self.entry_full_name.insert(0, row[1])
-            self.entry_phone.insert(0, row[2] if row[2] else "")
-            self.entry_address.insert(0, row[3] if row[3] else "")
-            for item in self.tree_readers.get_children():
-                if str(self.tree_readers.item(item, 'values')[0]) == str(row[0]):
-                    self.tree_readers.selection_set(item)
-                    self.tree_readers.focus(item)
-                    self.tree_readers.see(item)
-                    break
+
+        # 1. Gọi Controller, 'results' SẼ LÀ MỘT LIST
+        results = find_reader(search_term)
+
+        # 2. Xử lý kết quả
+        if results is None:
+            messagebox.showerror("Database Error", "Cannot search database", parent=self)
+        elif not results:  # (not results) == (results == [])
+            messagebox.showinfo("Not found", "No readers found matching the search term.", parent=self)
+            self.load_all_readers(reader_list=[])  # Tải bảng trống
         else:
-            messagebox.showinfo("Can not find", "Can not find reader", parent=self)
+            # 3. Tải kết quả tìm kiếm vào bảng
+            self.load_all_readers(reader_list = results)
+
 
