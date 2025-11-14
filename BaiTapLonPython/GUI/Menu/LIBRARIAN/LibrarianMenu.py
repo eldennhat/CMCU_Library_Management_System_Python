@@ -7,8 +7,10 @@ from PIL import ImageTk, Image
 from GUI.Font.font import FONT_PIXELS
 from tkmacosx import Button as macButton
 
+from GUI.Menu.VIEW.BookCopyMenu import BookCopyMenuView
 from GUI.Menu.VIEW.BookMenu import BookManaFrame
 from GUI.Menu.VIEW.LoanMenu import LoanMenu
+from GUI.Menu.VIEW.Reader_MeoMeo import ReaderManagementView
 from GUI.define import PATH_IMAGE
 
 
@@ -18,9 +20,9 @@ class LibrarianMenu(tk.Frame):
         # (Lưu ý: Đổi tên file ảnh nếu bạn muốn dùng ảnh khác)
         image_path = os.path.join(PATH_IMAGE, "backgroundLogin.png")
 
-        # (Lưu ý: Đổi kích thước cho khớp với cửa sổ Admin)
-        window_width = 800
-        window_height = 600
+        #
+        window_width = 1000
+        window_height = 800
 
         try:
             img = Image.open(image_path)
@@ -42,10 +44,8 @@ class LibrarianMenu(tk.Frame):
 
         except Exception as e:
             print(f"Lỗi khi tải background AdminMenu: {e}")
-    """
-    Frame chứa giao diện Menu của Thủ thư (Librarian).
-    """
 
+    #Frame chứa giao diện Menu của Thủ thư (Librarian).
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
@@ -56,7 +56,7 @@ class LibrarianMenu(tk.Frame):
         self._setup_menu_bar()
 
         self.content_frame = tk.Frame(self, bg = "white")
-        self.content_frame.pack(fill="both", expand=True, padx=50, pady=50)
+        self.content_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
         self.current_view = None
         self.show_welcome_view()
@@ -77,13 +77,15 @@ class LibrarianMenu(tk.Frame):
 
         # cho các label thả xuống vào cái menu đó
         book_menu.add_command(label="Book Title Manager", command=self.show_book_manager_view)
-        book_menu.add_command(label="Book Copy Manager")
+        book_menu.add_command(label="Book Copy Manager",command= self.show_book_copy_manager)
 
-        loan_button = macButton(menu_frame, text="Loan Manager", padx=5, command=self.show_loan_manager_view)
+
+        # --- Button 2: Quản lý Mượn/Trả ---
+        loan_button = macButton(menu_frame, text=" Loan Manager ", command=self.show_loan_manager_view)
         loan_button.pack(side='left', padx=30)
 
         #--- Button 3: Quản Lý Độc giả ---
-        user_button = macButton(menu_frame, text="Reader Manager", padx=5)
+        user_button = macButton(menu_frame, text="Reader Manager", padx=5, command = self.show_reader_manager)
         user_button.pack(side='left', padx=30)
 
         # --- Button 4: Đăng xuất ---
@@ -103,20 +105,32 @@ class LibrarianMenu(tk.Frame):
         self._clear_content_frame()
         self.current_view = ttk.Label(
             self.content_frame,
-            text="Chào mừng Thủ thư!",
-            font=(FONT_PIXELS, 20, "bold")
+            text="Welcome Librarian",
+            font=(FONT_PIXELS, 40, "bold")
         )
         self.current_view.pack(pady=50, padx=50)
 
     def show_book_manager_view(self):
         self._clear_content_frame()
         self.current_view = BookManaFrame(self.content_frame)
-        self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
+        self.current_view.pack(fill="both", expand=True, padx=5, pady=5)
 
+    # Hiện view quản lý mượn trả
     def show_loan_manager_view(self):
         self._clear_content_frame()
         self.current_view = LoanMenu(self.content_frame)
-        self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
+        self.current_view.pack(fill="both", expand=True, padx=5, pady=5)
+
+    # Hiện View quản lý độc giả
+    def show_reader_manager(self):
+        self._clear_content_frame()
+        self.current_view = ReaderManagementView(self.content_frame)
+        self.current_view.pack(fill="both", expand=True, padx=5, pady=5)
+
+    def show_book_copy_manager(self):
+        self._clear_content_frame()
+        self.current_view = BookCopyMenuView(self.content_frame)
+        self.current_view.pack(fill="both", expand=True, padx=5, pady=5)
 
 
     def logout(self):

@@ -17,22 +17,6 @@ class ReaderManagementView(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
-        # --- Style cho widget (chỉ dùng cho ttk) ---
-
-
-        style = ttk.Style()
-        style.configure("TLabel", font=APP_FONT, background=BG_COLOR)
-        style.configure("TButton", font=APP_FONT)
-        style.configure("TEntry")
-        style.configure("TCombobox", font=APP_FONT)
-        style.configure("TTreeview.Heading", font=APP_FONT_LARGE)
-        style.configure("TTreeview", font=APP_FONT, rowheight=25)
-        style.configure("TLabelFrame", font=APP_FONT_LARGE, background=BG_COLOR)
-        style.configure("TLabelFrame.Label",
-                        font=APP_FONT_LARGE,
-                        background=BG_COLOR,
-                        foreground="#000000")
-
         self.create_widgets()
         self.load_all_readers()
 
@@ -89,9 +73,9 @@ class ReaderManagementView(tk.Frame):
             self.entry_reader_name_phone_search.pack(side="left", fill="x", expand=True, padx=5)
             self.btn_search = macButton(
                 frame_search, text="Find", command=self.on_find_reader_click,
-                font=APP_FONT, borderwidth=4, relief="raised"
+                font=APP_FONT, borderwidth=4, relief="raised", bg = "green", fg="white",
             )
-            self.btn_search.pack(side= "left", padx=(10, 0))
+            self.btn_search.pack(side= "left", padx=10)
 
             # Pack khung Details lên TRÊN (nằm dưới Search)
             frame_details = tk.LabelFrame(main_frame, text="Reader Details")
@@ -224,34 +208,34 @@ class ReaderManagementView(tk.Frame):
         phone = self.entry_phone.get()
         address = self.entry_address.get()
         if not reader_id:
-            messagebox.showerror("Lỗi", "Vui lòng chọn một độc giả từ bảng để cập nhật.", parent=self)
+            messagebox.showerror("Error ", "Please choose reader id", parent=self)
             return
         success = update_reader(reader_id, full_name, phone, address)
         if success:
-            messagebox.showinfo("Thành công", "Cập nhật độc giả thành công!", parent=self)
+            messagebox.showinfo("Success", "Update success", parent=self)
             self.clear_form_and_reload()
         else:
-            messagebox.showerror("Lỗi CSDL", "Không thể cập nhật độc giả.", parent=self)
+            messagebox.showerror("Database Error", "Can not update reader", parent=self)
 
     def on_delete_reader_click(self):
         reader_id = self.entry_reader_id.get()
         if not reader_id:
-            messagebox.showerror("Lỗi", "Vui lòng chọn một độc giả từ bảng để xóa.", parent=self)
+            messagebox.showerror("Error", "Please choose reader on treeview to delete", parent=self)
             return
-        if not messagebox.askyesno("Xác nhận", f"Bạn có chắc muốn xóa Độc giả ID: {reader_id}?", parent=self):
+        if not messagebox.askyesno("Confirm", f"Are you sure to remove : {reader_id}?", parent=self):
             return
         success = delete_reader(reader_id)
         if success:
-            messagebox.showinfo("Thành công", "Xóa độc giả thành công!", parent=self)
+            messagebox.showinfo("Success", "Delete reader", parent=self)
             self.clear_form_and_reload()
         else:
-            messagebox.showerror("Lỗi CSDL", "Không thể xóa độc giả.\nLưu ý: Không thể xóa độc giả đang có phiếu mượn.",
-                                 parent=self)
+            messagebox.showerror("Database Error", "Can not delete reader", parent=self
+                                 )
 
     def on_find_reader_click(self):
         search_term = self.entry_reader_name_phone_search.get().strip()
         if not search_term:
-            messagebox.showerror("Lỗi", "Vui lòng nhập Tên hoặc SĐT để tìm.", parent=self)
+            messagebox.showerror("Error", "Please enter name or Phone to search", parent=self)
             return
         row = find_reader(search_term)
         if row:
@@ -267,5 +251,5 @@ class ReaderManagementView(tk.Frame):
                     self.tree_readers.see(item)
                     break
         else:
-            messagebox.showinfo("Không tìm thấy", "Không tìm thấy độc giả nào khớp.", parent=self)
+            messagebox.showinfo("Can not find", "Can not find reader", parent=self)
 

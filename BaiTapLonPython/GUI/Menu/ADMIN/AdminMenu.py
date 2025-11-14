@@ -3,9 +3,12 @@ from tkinter import ttk
 import os
 from PIL import Image, ImageTk
 
+from GUI.Menu.ADMIN.StaffMenu import StaffManagementView
+from GUI.Menu.VIEW.BookCopyMenu import BookCopyMenuView
 from GUI.Menu.VIEW.BookMenu import BookManaFrame
 from GUI.Menu.ADMIN.RegisterView import RegisterView
 from GUI.Menu.VIEW.LoanMenu import LoanMenu
+from GUI.Menu.VIEW.Reader_MeoMeo import ReaderManagementView
 from GUI.define import PATH_IMAGE
 from tkmacosx import Button as macButton
 
@@ -15,9 +18,8 @@ class AdminMenu(tk.Frame):
         # (Lưu ý: Đổi tên file ảnh nếu bạn muốn dùng ảnh khác)
         image_path = os.path.join(PATH_IMAGE, "backgroundLogin.png")
 
-        # (Lưu ý: Đổi kích thước cho khớp với cửa sổ Admin)
-        window_width = 800
-        window_height = 600
+        window_width = 1000
+        window_height = 800
 
         try:
             img = Image.open(image_path)
@@ -53,7 +55,7 @@ class AdminMenu(tk.Frame):
 
         #--2. Tạo 1 frame nội dung
         self.content_frame = tk.Frame(self, bg = "white")
-        self.content_frame.pack(fill="both",expand=True,  padx=50, pady=50)
+        self.content_frame.pack(fill="both",expand=True,  padx=10, pady=10)
 
         self.current_view = None
 
@@ -72,17 +74,10 @@ class AdminMenu(tk.Frame):
         user_button.pack(side='left', padx=(5))
 
 
-        #--Menu 1: Quản lý nhân viên
-        #Sẽ tạo ra menubutton khi ấn sẽ hiện ra các chức năng
-        staff_menubutton = ttk.Menubutton(menu_frame, text = 'Staff')
-        staff_menubutton.pack(side='left', padx=5)
+        #--Button 2: Quản lý nhân viên
+        staff_button = macButton(menu_frame, text= "Staff Manager", command = self.show_staff_menu_view, padx= 5)
+        staff_button.pack(side='left', padx=(5))
 
-        #Định nghĩa 1 menu cho MenuButton
-        staff_menu = tk.Menu(staff_menubutton, tearoff=0)
-        staff_menubutton.config(menu=staff_menu)
-        #cho các label thả xuống vào cái menu đó
-        staff_menu.add_command(label = "Register for staff", command= self.show_create_staff_account_view)
-        staff_menu.add_command(label = "Staff Manager")
 
         #--Menu 2: Quản lý sách (gồm đầu sách và bản sao)
         book_menubutton = ttk.Menubutton(menu_frame, text = "Book Manager ")
@@ -94,8 +89,9 @@ class AdminMenu(tk.Frame):
 
         # cho các label thả xuống vào cái menu đó
         book_menu.add_command(label="Book Title Manager", command= self.show_book_manager_view)
-        book_menu.add_command(label="Book Copy Manager")
+        book_menu.add_command(label="Book Copy Manager", command= self.show_copy_manager_view)
 
+        #Button mượn trả
         loan_button = macButton(menu_frame, text="Loan Manager", padx=5, command=self.show_loan_manager_view)
         loan_button.pack(side='left', padx=5)
 
@@ -112,6 +108,8 @@ class AdminMenu(tk.Frame):
 
         system_menu.add_command(label="Log Out", command=self.logout)
 
+
+
     def _clear_content_frame(self):
         """Hàm hỗ trợ: Xóa mọi thứ đang có trong content_frame."""
         if self.current_view:
@@ -123,31 +121,28 @@ class AdminMenu(tk.Frame):
         self._clear_content_frame()
         self.current_view = ttk.Label(
             self.content_frame,
-            text = "Chào mừng ADMIN",
-            font = ("Press Start 2P", 20, "bold"),
+            text = "Welcome Admin",
+            font = ("Press Start 2P", 45, "bold"),
         )
         self.current_view.pack(padx=50, pady=50)
 
     #CÁC HÀM LIÊN QUAN ĐẾN QUẢN LÝ ĐỘC GIẢ
     def show_reader_manager(self):
         self._clear_content_frame()
-        self.current_view = ttk.Label(
-            self.content_frame,
-            text = "Readers Manager Demo",
-            font = ("Press Start 2P", 20, "bold"),
-        )
-        self.current_view.pack(padx=50, pady=50)
+        self.current_view = ReaderManagementView(self.content_frame)
+        self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
 
-    #CÁC HÀM TRONG QUẢN LÝ NHÂN VIÊN
+    #CÁC VIEW TRONG QUẢN LÝ NHÂN VIÊN
     def show_create_staff_account_view(self):
-        """
-        Tải RegisterView (Frame) vào content_frame.
-        """
+        #Tải RegisterView (Frame) vào content_frame.
         self._clear_content_frame()
-
         self.current_view = RegisterView(self.content_frame)
+        self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
+    def show_staff_menu_view(self):
+        self._clear_content_frame()
+        self.current_view = StaffManagementView(self.content_frame)
         self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
     #SỰ KIỆN CHO NÚT BOOK MANAGER
@@ -156,20 +151,19 @@ class AdminMenu(tk.Frame):
         self.current_view = BookManaFrame(self.content_frame)
         self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
+    def show_copy_manager_view(self):
+        self._clear_content_frame()
+        self.current_view = BookCopyMenuView(self.content_frame)
+        self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
+
+
+    #SỰ KIỆN CHO LOAN MANAGER
     def show_loan_manager_view(self):
         self._clear_content_frame()
         self.current_view = LoanMenu(self.content_frame)
         self.current_view.pack(fill="both", expand=True, padx=10, pady=10)
 
-    #HÀM ĐỂ DISPLAY STAFF MANAGEMENT
-    def show_staff_mana_view(self):
-        """
-        update StaffMana vao content_frame
-        """
-        self._clear_content_frame()  #delete frame cũ
-        self.current_view = StaffManaFrame(self.content_frame) #create a new frame
-        self.current_view.pack(fill = 'both', expand = True, padx = 10, pady = 10)
-        
+
     #HÀM ĐỂ ĐĂNG XUẤT
     def logout(self):
         self.parent.show_login_view()

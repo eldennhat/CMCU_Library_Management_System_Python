@@ -10,7 +10,7 @@ class LoanDetailView(tk.Toplevel):
         self.loan_id = loan_id
 
         self.title(f"Loan Details #{self.loan_id}")
-        self.geometry("600x450")
+        self.geometry("700x500")
         self.resizable(False, False)
 
         # --- Khóa cửa sổ cha (giống RegisterView) ---
@@ -18,16 +18,16 @@ class LoanDetailView(tk.Toplevel):
         self.grab_set()
 
         # --- Tạo 2 khung chính ---
-        info_frame = ttk.LabelFrame(self, text="Loan Infomation", padding=15)
+        info_frame = ttk.LabelFrame(self, text="Loan Infomation", padding=10)
         info_frame.pack(fill="x", padx=10, pady=10)
 
         books_frame = ttk.LabelFrame(self, text="Loan List", padding=15)
-        books_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        books_frame.pack(fill="both", expand=True, padx=5, pady=(0, 10))
 
         # --- Nút Đóng ---
         close_button = macButton(
             self, text="Close", command=self.destroy,
-            bg="#f44336", fg="white", borderwidth=4
+            bg="#f44336", fg="white", borderwidth=4, activebackground="#f44336", relief="raised"
         )
         close_button.pack(fill="x", ipady=5, padx=10, pady=(0, 10))
 
@@ -43,20 +43,20 @@ class LoanDetailView(tk.Toplevel):
         info_frame.columnconfigure(3, weight=1)
 
         # (Hàng 1)
-        ttk.Label(info_frame, text="Reader:").grid(row=0, column=0, sticky="w", padx=5, pady=2)
-        ttk.Label(info_frame, text=loan_info['ReaderName']).grid(row=0, column=1, sticky="w", padx=5, pady=2)
-        ttk.Label(info_frame, text="Phone:").grid(row=0, column=2, sticky="w", padx=5, pady=2)
-        ttk.Label(info_frame, text=loan_info['ReaderPhone']).grid(row=0, column=3, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text="Reader:").grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text=loan_info['ReaderName']).grid(row=0, column=1, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text="Phone:").grid(row=0, column=2, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text=loan_info['ReaderPhone']).grid(row=0, column=3, sticky="w", padx=5, pady=2)
 
         # (Hàng 2)
-        ttk.Label(info_frame, text="Staff:").grid(row=1, column=0, sticky="w", padx=5, pady=2)
-        ttk.Label(info_frame, text=loan_info['StaffName']).grid(row=1, column=1, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text="Staff:").grid(row=1, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text=loan_info['StaffName']).grid(row=1, column=1, sticky="w", padx=5, pady=2)
 
         # (Hàng 3)
-        ttk.Label(info_frame, text="Loan date:").grid(row=2, column=0, sticky="w", padx=5, pady=2)
-        ttk.Label(info_frame, text=str(loan_info['LoanDate'])).grid(row=2, column=1, sticky="w", padx=5, pady=2)
-        ttk.Label(info_frame, text="Due Date:").grid(row=2, column=2, sticky="w", padx=5, pady=2)
-        ttk.Label(info_frame, text=str(loan_info['DueDate'])).grid(row=2, column=3, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text="Loan date:").grid(row=2, column=0, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text=str(loan_info['LoanDate'])).grid(row=2, column=1, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text="Due Date:").grid(row=2, column=2, sticky="w", padx=5, pady=2)
+        tk.Label(info_frame, text=str(loan_info['DueDate'])).grid(row=2, column=3, sticky="w", padx=5, pady=2)
 
         #Nạp dữ liệu vào bảng sách
         columns = ("copy_id", "title", 'returned',"deposit","fine")

@@ -1,18 +1,11 @@
 import os
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
 from PIL import Image, ImageTk
 from tkmacosx import Button as macButton
-
-
 from GUI.define import PATH_IMAGE
 from controller.login_controller.auth_controller import check_login
-
-
-
-
-
 class LoginView(tk.Frame):
     """
     Frame chứa giao diện Đăng nhập với các tùy chỉnh về style.
@@ -21,7 +14,7 @@ class LoginView(tk.Frame):
     def _setup_background(self):
         image_path = os.path.join(PATH_IMAGE, "backgroundLogin.png")
         img = Image.open(image_path)
-        img = img.resize((600,400), Image.Resampling.LANCZOS)
+        img = img.resize((1000,800), Image.Resampling.LANCZOS)
         #Image.Resampling.LANCZOS:Giúp thay đổi kích thước ảnh mà vẫn giữu được đỗ sắc nét
 
         #lưu tham chiếu
@@ -59,7 +52,7 @@ class LoginView(tk.Frame):
             login_frame,
             text="LOGIN",
             font=("Press Start 2P", 12, "bold"),
-            foreground="black",
+            foreground="black"
         )
         # Đặt title này ở hàng đầu tiên, căn giữa (columnspan=2)
         title_label.grid(row=0, column=0, columnspan=2, padx=15, pady=(10, 20))
@@ -121,13 +114,14 @@ class LoginView(tk.Frame):
             button_frame,
             text="Login",
             font=("Press Start 2P", 9, "bold"),
-            bg="green",
+            bg="#25A18E",
             fg="white",
             width=85,
             borderwidth=4,
             cursor="hand2",
             relief='raised',
             bordercolor="black",
+            activebackground="green",
             command=self._on_login_click, #nút bấm sẽ chạyh hàm _on_login
         )
         self.login_button.pack(anchor= "center", padx=10)
@@ -139,17 +133,17 @@ class LoginView(tk.Frame):
         role = self.role_var.get()
 
         if not username or not password or not role:
-            print("Thiếu thông tin , Vui lòng nhập đủ thông tin") #Báo lỗi bằg 1 tin nhắn
+            messagebox.showwarning(message="Thiếu thông tin , Vui lòng nhập đủ thông tin") #Báo lỗi bằg 1 tin nhắn
             return
 
         is_valid = check_login(username, password, role)
         #Gọi hàm check: Hàm nhận 3 tham số để check trong csdl
         #Hàm check_login ở controller sẽ check xem có chuẩn thông tin không
 
-        if is_valid: #nếu chả về chuẩn check login sẽ true
+        if is_valid: #nếu chả về chuẩn check login sẽ true, và trả về role cho Main
             self.on_login_callback(role)
         else:
-            print("Đăng nhập thất bại! sai tên sai mk")
+            messagebox.showwarning(message="Đăng nhập thất bại! sai tên sai mk")
 
 
 

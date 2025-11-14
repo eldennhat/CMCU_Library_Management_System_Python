@@ -1,3 +1,5 @@
+from tkinter import messagebox
+
 from database.db_connector import get_db_connection
 import pymssql
 
@@ -7,7 +9,7 @@ def check_login(username, password, role): #hàm nhận vào 3 tham số để c
     conn = get_db_connection() #hàm này ở file db_connector
     #database kết nối
     if conn is None:
-        print("Lỗi: Không thể kết nối tới CSDL. ")
+        messagebox.showwarning("Lỗi: Không thể kết nối tới CSDL. ")
         return False
 
     cursor = conn.cursor() #hàm để dịch sql
@@ -27,7 +29,7 @@ def check_login(username, password, role): #hàm nhận vào 3 tham số để c
         else:
             return False
     except pymssql.Error as e:
-        print(f"Lỗi truy vấn sql {e}")
+        messagebox.showwarning(f"Lỗi truy vấn sql {e}")
         return False
     finally:
         if conn:

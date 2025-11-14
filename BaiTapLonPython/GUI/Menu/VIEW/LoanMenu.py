@@ -5,7 +5,7 @@ from GUI.Font.font import FONT_PIXELS
 from tkmacosx import Button as macButton
 
 from GUI.Menu.VIEW.LoanDetailView import LoanDetailView
-from controller.view_controller.Loan_controller import create_new_loan, return_book_copy
+from controller.view_controller.Loan_controller import create_new_loan, return_book_copy, delete_loan
 from database.db_connector import get_db_connection
 import datetime
 
@@ -129,7 +129,7 @@ class LoanMenu(tk.Frame):
     #======================== 3 TAB CHỨC NĂNG CỦA LOAN MANAGER===============================
     #Tab tạo phiếu mượn
     def _create_loan_tab(self, parent):
-        info_frame = tk.LabelFrame(parent, text="Loan Information", font=self.pixel_font)
+        info_frame = tk.LabelFrame(parent, text="Loan Information")
         info_frame.pack(fill="x", pady=5, side = "top")
 
         info_frame.columnconfigure(1, weight=1)
@@ -143,7 +143,7 @@ class LoanMenu(tk.Frame):
         #Label chọn Staff
         ttk.Label(info_frame, text="Staff:", font = (FONT_PIXELS, 9)).grid(row=1, column=0, padx=5, pady=5, sticky="w")
         #Combobox chọn StaffId
-        self.staff_combobox = ttk.Combobox(info_frame, textvariable=self.staff_id_var, state="readonly", width=40)
+        self.staff_combobox = ttk.Combobox(info_frame, textvariable=self.staff_id_var, state="readonly", width=40, font= "Arial")
         self.staff_combobox.grid(row=1, column=1, padx=5, pady=5, columnspan=5, sticky="we")
 
         # Ngày hẹn trả
@@ -158,45 +158,59 @@ class LoanMenu(tk.Frame):
         ttk.Label(time_frame, text="Minutes:", font = (FONT_PIXELS, 8)).pack(side="left", padx=(5, 2))
         ttk.Spinbox(time_frame, textvariable=self.due_date_min_var, from_=0, to=59, width=3).pack(side="left")#phút hiện tại
 
-        #Cho label chứa các nút  xuống bottom cuối
-        button_label = tk.Label(parent)
+
+
+        # Dùng tk.Frame và pack() nó xuống DƯỚI CÙNG
+        button_label = tk.Frame(parent)
         button_label.pack(fill="x", ipady=10, pady=10, padx=10, side="bottom")
 
+        # : Cấu hình 3 cột  để 3 nút giãn đều
+        button_label.columnconfigure(0, weight=1)
         button_label.columnconfigure(1, weight=1)
+        button_label.columnconfigure(2, weight=1)
 
         confirm_button = macButton(button_label, text="CONFIRM", command=self._on_confirm_loan, bg="green", fg="white",
-                  font=self.pixel_font, borderwidth=4, relief="raised")
-        confirm_button.grid(row=0, column=0, padx=5,columnspan=1)
+                                   font=self.pixel_font, borderwidth=4, relief="raised")
+        #  sticky="we" để nút lấp đầy cột
+        confirm_button.grid(row=0, column=0, padx=5, sticky="we")
 
-        addBookButton = macButton(button_label, text="Add", command=self._on_add_book_to_list, bg="#BA0000", relief="raised",
+        addBookButton = macButton(button_label, text="Add", command=self._on_add_book_to_list, bg="#BA0000",
+                                  relief="raised",
                                   font=self.pixel_font, fg="white", borderwidth=4)
-        addBookButton.grid(row=0, column=1, padx=5, columnspan=1)
+        addBookButton.grid(row=0, column=1, padx=5, sticky="we")
 
         removeBook = macButton(button_label, text="Remove", command=self._on_remove_book_from_list, bg="orange",
                                relief="raised", font=self.pixel_font, fg="white", borderwidth=4)
-        removeBook.grid(row=0, column=2, padx=5,columnspan=1)
+        removeBook.grid(row=0, column=2, padx=5, sticky="we")
 
 
-        # Frame thêm sách
-        book_frame = tk.LabelFrame(parent, text="Add Books to Loan", font=self.pixel_font_bold)
+        #Book frame
+        book_frame = tk.LabelFrame(parent, text="Add Books to Loan")
         book_frame.pack(fill="both", expand=True, pady=5, side="top")
 
-        book_frame.columnconfigure(1, weight=1) #cho combobox tự giãn
 
-        tk.Label(book_frame, text="Available Copy:", font = (FONT_PIXELS, 10)).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        # 1. Cấu hình grid cho book_frame
+        book_frame.columnconfigure(1, weight=1)  # Cột 1 (Combobox) sẽ giãn
+        book_frame.rowconfigure(1, weight=1)  # Hàng 1 (Treeview) sẽ giãn
+
+        # 2. Hàng 0: ComboBox
+        tk.Label(book_frame, text="Available Copy:", font=(FONT_PIXELS, 10)).grid(row=0, column=0, padx=5, pady=5,
+                                                                                  sticky="w")
         self.copy_id_combobox = ttk.Combobox(book_frame, textvariable=self.copy_id_to_add_var, state="readonly",
-                                             width=20)
-        self.copy_id_combobox.grid(row=0, column=1, padx=5, pady=5)
+                                             width=40, font="Arial")
 
+        self.copy_id_combobox.grid(row=0, column=1, padx=5, pady=5, sticky="we")
 
+        # 3. Hàng 1: Treeview (Giỏ hàng)
         self.loan_tree = ttk.Treeview(book_frame, columns=("CopyId", "Title"), show="headings", height=5)
         self.loan_tree.heading("CopyId", text="Book Copy ID")
         self.loan_tree.heading("Title", text="Book Title")
-        self.loan_tree.column("CopyId", width=100, anchor="center")
-        self.loan_tree.column("Title", width=300)
-        self.loan_tree.grid(row=1, column=0, padx=5, pady=5, columnspan=4)
+        self.loan_tree.column("CopyId", width=300, anchor="center")
+        self.loan_tree.column("Title", width=500)
+        #   grid(), columnspan=2 (chiếm 2 cột), sticky="nsew"
+        self.loan_tree.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
-        book_frame.rowconfigure(1, weight=1)
+
 
     #Tab Trả sách
     def _create_return_tab(self, parent):
@@ -235,11 +249,24 @@ class LoanMenu(tk.Frame):
         tree_frame = ttk.Frame(parent)
         tree_frame.pack(fill="both", expand=True)
 
-        refresh_button = macButton(parent, text="Refresh Data", command=self._load_all_loan_details,bg="#007BFF", fg="white")
+        button_frame = ttk.Frame(parent)
+        button_frame.pack(fill="x", pady=10, padx=10)
+
+        refresh_button = macButton(button_frame, text="Refresh Data", command=self._load_all_loan_details,
+                                   bg="#007BFF", fg="white", font=self.pixel_font_bold,
+                                   borderwidth=4, relief="raised")
+        refresh_button.pack(side="left", fill="x", expand=True, padx=(0, 5))
+
+        #  THÊM NÚT XÓA
+        delete_button = macButton(button_frame, text="Delete Selected Loan", command=self._on_delete_loan_click,
+                                  bg="#F44336", fg="white", font=self.pixel_font_bold,
+                                  borderwidth=4, relief="raised")
+        delete_button.pack(side="left", fill="x", expand=True, padx=(5, 0))
+
         #Nút refesh được truyền vào command tải lại tất cả thông tin
         refresh_button.pack(pady=10, fill="x")
 
-        scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL)
+        scrollbar = ttk.Scrollbar(tree_frame, orient= "vertical")
 
         columns = ( "LoanId", "CopyId", "BookTitle", "ReturnedDate",
                    "StaffName", "ReaderName","ReaderId", "Fine", "Deposit")
@@ -268,8 +295,8 @@ class LoanMenu(tk.Frame):
         self.view_all_tree.column("Fine", width=100, anchor="e")
         self.view_all_tree.column("Deposit", width=100, anchor="e")
 
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.view_all_tree.pack(side=tk.LEFT, fill="both", expand=True)
+        scrollbar.pack(side="right", fill= "y")
+        self.view_all_tree.pack(side="left", fill="both", expand=True)
 
         self.view_all_tree.bind("<Double-1>", self._on_tree_double_click)
         self._load_all_loan_details()
@@ -323,9 +350,9 @@ class LoanMenu(tk.Frame):
 
     #hàm hỗ trợ click đúp
     def _on_tree_double_click(self, event):
-        """
-        Được gọi khi người dùng double-click vào một hàng trong Tab 'View All'.
-        """
+
+        #Được gọi khi người dùng double-click vào một hàng trong Tab 'View All'.
+
         # 1. Lấy hàng được chọn
         selected_item = self.view_all_tree.focus()
         if not selected_item:
@@ -339,7 +366,7 @@ class LoanMenu(tk.Frame):
         try:
             loan_id = int(values[0])
         except (IndexError, ValueError):
-            print("Lỗi: Không thể lấy LoanId từ hàng đã chọn.")
+            print("Error")
             return
 
         # 4. Tạo và mở cửa sổ pop-up
@@ -371,13 +398,13 @@ class LoanMenu(tk.Frame):
         copy_id = self._get_id_from_combobox(self.copy_id_to_add_var , self.copies_list, 'CopyId')
                                     #truyền copy_id từ combobox đc chọn được lấy từ list các copy được nhận từ câu lệnh truy vấn
         if not copy_id:
-            messagebox.showwarning("Invalid ID", "Vui lòng chọn một sách.", parent=self)
+            messagebox.showwarning("Invalid ID", "Please chooese a book.", parent=self)
             return
 
         copy_id_str = str(copy_id)
         #Kiểm tra xem có trong danh sách mượn chưa
         if copy_id_str in self.temp_loan_list:
-            messagebox.showinfo("Duplicate", "Sách này đã có trong danh sách mượn.", parent=self)
+            messagebox.showinfo("Duplicate", "This book are in loan list", parent=self)
             return
         #Nếu Copy_chưa trong danh sách mượn thì thêm vào
         self.temp_loan_list.append(copy_id_str)
@@ -398,7 +425,7 @@ class LoanMenu(tk.Frame):
         selected_item = self.loan_tree.focus() #Chọn 1 sách để xoá trong loan tree để xoá bao gồm cả id và tên
 
         if not selected_item:
-            messagebox.showwarning("No Selection", "Vui lòng chọn một sách để xóa.", parent=self)
+            messagebox.showwarning("No Selection", "Please chosse a book", parent=self)
             return
 
         values = self.loan_tree.item(selected_item, "values")
@@ -415,7 +442,7 @@ class LoanMenu(tk.Frame):
         staff_id = self._get_id_from_combobox(self.staff_id_var, self.staff_list, 'StaffId')
 
         if not reader_id or not staff_id:
-            messagebox.showwarning("Invalid Info", "Vui lòng chọn Reader và Staff.", parent=self)
+            messagebox.showwarning("Invalid Info", "Please choose reader and staff.", parent=self)
             return
 
         # 2. Lấy Ngày Giờ Hẹn Trả từ combobox
@@ -429,20 +456,20 @@ class LoanMenu(tk.Frame):
 
         except ValueError:
             messagebox.showwarning("Invalid Date/Time",
-                                   "Định dạng Ngày hẹn trả không hợp lệ.\nPhải là YYYY-MM-DD và Giờ/Phút hợp lệ.",
+                                   "Date type are not true.\nMust be YYYY-MM-DD and hour/minutes ilegal.",
                                    parent=self)
             return
 
         if not self.temp_loan_list:
-            messagebox.showwarning("No Books", "Vui lòng thêm ít nhất một cuốn sách vào phiếu mượn.", parent=self)
+            messagebox.showwarning("No Books", "Please choose at least 1 book into loan list.", parent=self)
             return
 
         # 3. Hỏi xác nhận
         if not messagebox.askyesno("Confirm Loan",
-                                   f"Tạo phiếu mượn cho Reader ID: {reader_id}\n"
-                                   f"Hẹn trả lúc: {full_due_date_str}\n"
-                                   f"Tổng số sách: {len(self.temp_loan_list)}\n"
-                                   "Bạn có chắc chắn không?", parent=self):
+                                   f"Create Loan Reader ID: {reader_id}\n"
+                                   f"Due date at: {full_due_date_str}\n"
+                                   f"Total Books: {len(self.temp_loan_list)}\n"
+                                   "Are you sure?", parent=self):
             return
 
         # 4. Gọi controller ĐỂ TẠO PHIẾU MƯỢN
@@ -467,7 +494,7 @@ class LoanMenu(tk.Frame):
         copy_id = self._get_id_from_combobox(self.copy_id_to_return_var, [], 'CopyId')
 
         if not copy_id:
-            messagebox.showwarning("Invalid ID", "Vui lòng chọn sách (Copy ID) để trả.", parent=self)
+            messagebox.showwarning("Invalid ID", "Please chosse Id to return", parent=self)
             return
 
         # 2. Lấy Ngày Giờ Trả
@@ -481,13 +508,13 @@ class LoanMenu(tk.Frame):
 
         except ValueError:
             messagebox.showwarning("Invalid Date/Time",
-                                   "Định dạng Ngày trả không hợp lệ.\nPhải là YYYY-MM-DD và Giờ/Phút hợp lệ.",
+                                   "Date type are not true.\nMust be YYYY-MM-DD and hour/minutes ilegal.",
                                    parent=self)
             return
 
         # 3. Hỏi xác nhận
         if not messagebox.askyesno("Confirm Return",
-                                   f"Xác nhận trả sách (Copy ID: {copy_id})\nVào lúc: {full_return_date_str}?",
+                                   f"Confirm return (Copy ID: {copy_id})\n IN: {full_return_date_str}?",
                                    parent=self):
             return
 
@@ -502,6 +529,45 @@ class LoanMenu(tk.Frame):
             self._load_all_loan_details()  # Reload bảng View All
         else:
             messagebox.showerror("Error", message, parent=self)
+
+    def _on_delete_loan_click(self):
+
+       #Được gọi khi nhấn nút 'Delete Selected Loan' ở Tab 3.
+
+        # 1. Lấy hàng được chọn
+        selected_item = self.view_all_tree.focus()
+        if not selected_item:
+            messagebox.showwarning("Chưa chọn", "Vui lòng chọn một phiếu mượn từ bảng để xóa.", parent=self)
+            return
+
+        # 2. Lấy dữ liệu của hàng đó
+        values = self.view_all_tree.item(selected_item, "values")
+
+        try:
+            # Cột 2 (index 1) là LoanId
+            loan_id = int(values[0])
+        except (IndexError, ValueError):
+            messagebox.showerror("Lỗi", "Không thể lấy LoanId từ hàng đã chọn.", parent=self)
+            return
+
+        # 3. Hỏi xác nhận
+        if not messagebox.askyesno("Xác nhận XÓA",
+                                   f"Bạn có chắc muốn xóa TOÀN BỘ Phiếu Mượn ID: {loan_id}?\n\n"
+                                   "CẢNH BÁO: Mọi chi tiết mượn/trả của phiếu này sẽ bị xóa VĨNH VIỄN, "
+                                   "và các sách liên quan (nếu chưa trả) sẽ được trả về 'Available'.",
+                                   parent=self, icon='warning'):
+            return
+
+        # 4. Gọi Controller
+        success, message = delete_loan(loan_id)
+
+        if success:
+            messagebox.showinfo("Thành công", message, parent=self)
+            # 5. Tải lại MỌI THỨ
+            self._load_all_loan_details()  # Tải lại Tab 3
+            self._load_combobox_data()  # Tải lại sách 'Available' và 'OnLoan'
+        else:
+            messagebox.showerror("Lỗi CSDL", message, parent=self)
 
     def _clear_loan_form(self):
         """Xóa form sau khi tạo loan thành công."""

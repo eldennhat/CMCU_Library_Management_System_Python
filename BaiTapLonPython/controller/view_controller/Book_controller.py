@@ -1,4 +1,4 @@
-
+from tkinter import messagebox
 
 import pymssql
 from database.db_connector import get_db_connection
@@ -18,7 +18,7 @@ def get_all_books():
         results = cursor.fetchall()
         return results
     except pymssql.Error as e:
-        print("Error while fetching data from MySQL:", e)
+        messagebox.showwarning(message="Error while fetching data from MySQL:")
         return None
     finally:
         if conn is not None:
@@ -27,17 +27,17 @@ def get_all_books():
 
 # Ham Them sach
 def add_book(book_data):
-    """
-    Thêm một sách mới vào CSDL.
-    'book_data' là một tuple: (book_id, isbn, title, category, author, year)
-    """
+
+    # Thêm một sách mới vào CSDL.
+    # 'book_data' là một tuple: (book_id, isbn, title, category, author, year)
+
     conn = get_db_connection()
     if conn is None:
         return False
     cursor = conn.cursor()
     query = """
-        INSERT INTO Book (BookId,ISBN, Title, CategoryName, BookAuthor, PublishYear) 
-        VALUES (%s ,%s, %s, %s, %s, %s)
+        INSERT INTO Book (ISBN, Title, CategoryName, BookAuthor, PublishYear) 
+        VALUES (%s, %s, %s, %s, %s)
     """
 
     try:
@@ -45,7 +45,7 @@ def add_book(book_data):
         conn.commit() #Luu thay doi
         return True
     except pymssql.Error as e:
-        print("Error while inserting data into MySQL:", e)
+        messagebox.showwarningt(message = "Error while inserting data into MySQL:")
         return False
     finally:
         if conn is not None:
@@ -54,10 +54,10 @@ def add_book(book_data):
 
 
 def update_book(book_data):
-    """
-    Cập nhật một sách đã có.
-    'book_data' là một tuple: (isbn, title, category, author, year, book_id)
-    """
+    #
+    # Cập nhật một sách đã có.
+    # 'book_data' là một tuple: (isbn, title, category, author, year, book_id)
+    #
     conn = get_db_connection()
     if conn is None:
         return False
@@ -78,7 +78,7 @@ def update_book(book_data):
         conn.commit()
         return True
     except pymssql.Error as e:
-        print(f"Lỗi truy vấn SQL (update_book): {e}")
+        messagebox.showwarning(message=f"Lỗi truy vấn SQL (update_book): {e}")
         return False
     finally:
         if conn:
@@ -87,9 +87,9 @@ def update_book(book_data):
 
 
 def delete_book(book_id):
-    """
-    Xóa một sách khỏi CSDL dựa trên BookID.
-    """
+
+    #Xóa một sách khỏi CSDL dựa trên BookID.
+
     conn = get_db_connection()
     if conn is None:
         return False
@@ -102,7 +102,7 @@ def delete_book(book_id):
         conn.commit()
         return True
     except pymssql.Error as e:
-        print(f"Lỗi truy vấn SQL (delete_book): {e}")
+        messagebox.showwarning(message=f"Lỗi truy vấn SQL (delete_book): {e}")
         return False
     finally:
         if conn:
@@ -111,9 +111,9 @@ def delete_book(book_id):
 
 
 def search_book(keyword):
-    """
-    Tìm sách dựa trên Title (Tên sách) hoặc Author (Tác giả).
-    """
+
+    #Tìm sách dựa trên Title (Tên sách) hoặc Author (Tác giả).
+
     conn = get_db_connection()
     if conn is None:
         return None
@@ -134,7 +134,7 @@ def search_book(keyword):
         results = cursor.fetchall()
         return results
     except pymssql.Error as e:
-        print(f"Lỗi truy vấn SQL (search_book): {e}")
+        messagebox.showwarning(message=f"Lỗi truy vấn SQL (search_book): {e}")
         return None
     finally:
         if conn:

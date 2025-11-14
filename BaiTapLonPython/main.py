@@ -10,7 +10,7 @@ class MainApplication(tk.Tk):
     def __init__(self):
         super().__init__() #là mảnh đất chính để xây dựng ra các frame login, admin...
         self.title("Hệ thống quản lý thư viện")
-        self.geometry("600x400")
+        self.geometry("800x500")
         self.resizable(width=False, height=False)
 
         self.current_frame = None #Frame đang được hiển thị
@@ -44,7 +44,7 @@ class MainApplication(tk.Tk):
             self.current_frame.destroy()
         self.current_frame = AdminMenu(self)
 
-        self.geometry("800x600")
+        self.geometry("1000x800")
         self.title("Admin")
         self.resizable(False, False)
 
@@ -53,7 +53,7 @@ class MainApplication(tk.Tk):
             self.current_frame.destroy()
         self.current_frame = LibrarianMenu(self)
 
-        self.geometry("800x600")
+        self.geometry("1000x800")
         self.title("Librarian")
         self.resizable(False, False)
 

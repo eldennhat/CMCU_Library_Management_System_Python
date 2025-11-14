@@ -52,7 +52,7 @@ def add_reader(full_name, phone, address):
 
 
 def update_reader(reader_id, full_name, phone, address):
-    """Cập nhật thông tin độc giả."""
+    #Cập nhật thông tin độc giả.
     conn = get_db_connection()
     if not conn:
         return False
@@ -78,13 +78,13 @@ def update_reader(reader_id, full_name, phone, address):
 
 
 def delete_reader(reader_id):
-    """Xóa độc giả."""
+    #Xóa độc giả
     conn = get_db_connection()
     if not conn:
         return False
 
     cursor = conn.cursor()
-    sql = "DELETE FROM Reader WHERE ReaderId=%s"
+    sql = "DELETE FROM Reader WHERE ReaderId = %s"
 
     try:
         cursor.execute(sql, (reader_id,))
