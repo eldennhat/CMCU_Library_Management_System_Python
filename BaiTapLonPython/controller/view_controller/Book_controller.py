@@ -102,7 +102,7 @@ def delete_book(book_id):
         conn.commit()
         return True
     except pymssql.Error as e:
-        messagebox.showwarning(message=f"Lỗi truy vấn SQL (delete_book): {e}")
+        messagebox.showwarning(message=f"Lỗi truy vấn SQL Phải ĐẢM BẢO KHÔNG CÓ ĐẦU SÁCH NÀY Ở MỤC ĐANG MƯỢN: {e}")
         return False
     finally:
         if conn:
