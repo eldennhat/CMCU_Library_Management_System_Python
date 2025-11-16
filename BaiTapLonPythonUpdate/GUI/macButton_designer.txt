@@ -1,0 +1,52 @@
+Các Thuộc tính Giao diện của macButton
+Vì tkmacosx.Button được thiết kế để "bắt chước" và cải thiện tk.Button tiêu chuẩn, nó hỗ trợ hầu hết các thuộc tính của tk.Button nhưng đảm bảo chúng hoạt động trên Mac.
+
+1. Nội dung & Font
+text: Văn bản hiển thị trên nút. (Ví dụ: text="Login")
+font: Phông chữ của văn bản. (Ví dụ: font=("Press Start 2P", 10, "bold"))
+image: Hiển thị một ảnh (đối tượng PhotoImage) trên nút.
+compound: Nếu dùng cả text và image, thuộc tính này quyết định vị trí của ảnh
+so với text (ví dụ: 'left', 'right', 'top', 'bottom', 'center').
+
+2. Màu sắc (Quan trọng nhất)
++bg (hoặc background): Màu nền của nút. Đây là lý do chính bạn dùng thư viện này.
++fg (hoặc foreground): Màu chữ (văn bản) trên nút.
++activebackground: Màu nền của nút khi chuột đang nhấn (click) vào nó.
++activeforeground: Màu chữ của nút khi chuột đang nhấn vào nó.
++disabledforeground: Màu chữ khi nút ở trạng thái state="disabled".
+
+3. Viền & Kiểu
++bd (hoặc borderwidth): Độ dày của viền (tính bằng pixel).
+
++relief: Kiểu của viền, tạo hiệu ứng 3D.
+
+  'flat': Phẳng, không viền (giống như bạn dùng borderwidth=0).
+
+   'raised': Nổi lên (mặc định).
+
+    'sunken': Chìm xuống (thường dùng khi nút được nhấn).
+
+    'solid': Một đường viền đặc, rõ ràng.
+    flat, groove, raised, ridge, solid, or sunken
+
++bordercolor: (Riêng của tkmacosx) Cho phép bạn chỉ định màu của viền (nếu bd > 0).
+
+4. Kích thước & Căn lề
+width: Chiều rộng của nút. (Lưu ý: Nếu dùng text, đơn vị là số lượng ký tự; nếu dùng ảnh, đơn vị là pixel).
+
+height: Chiều cao của nút (tương tự width).
+
+padx: Khoảng đệm (padding) thêm theo chiều ngang (trái/phải) bên trong nút.
+
+pady: Khoảng đệm (padding) thêm theo chiều dọc (trên/dưới) bên trong nút.
+
+anchor: Căn lề cho text/ảnh bên trong nút (ví dụ: 'center' - mặc định, 'w' - căn trái, 'e' - căn phải).
+
+5. Trạng thái
+state: Trạng thái của nút.
+
+'normal': Bình thường, có thể nhấn.
+
+'disabled': Bị vô hiệu hóa, không nhấn được, chữ bị mờ đi.
+
+cursor: Kiểu con trỏ chuột khi di chuột qua nút. (Bạn đã dùng cursor="hand2" rất chuẩn).
