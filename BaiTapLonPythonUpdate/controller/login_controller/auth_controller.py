@@ -5,7 +5,7 @@ import pymssql
 
 
 #*********************HÀM CHECK ĐĂNG NHẬP*********************
-def check_login(username, password, role): #hàm nhận vào 3 tham số để check thông tin ở table
+def check_login(username, password): #hàm nhận vào 3 tham số để check thông tin ở table
     conn = get_db_connection() #hàm này ở file db_connector
     #database kết nối
     if conn is None:
@@ -16,16 +16,16 @@ def check_login(username, password, role): #hàm nhận vào 3 tham số để c
 
 
     #câu lệnh sql
-    query = "SELECT * FROM Account WHERE Username = %s AND PasswordHash = %s AND Role = %s;"
+    query = "SELECT Role FROM Account WHERE Username = %s AND PasswordHash = %s"
 
     #
     try:
         #truyền các đối số %s ở query với 3 đối số được truyền vào check_login
-        cursor.execute(query, (username, password, role)) #thực thi
+        cursor.execute(query, (username, password)) #thực thi
         results = cursor.fetchone() #chọn 1
 
         if results:
-            return True
+            return results[0]
         else:
             return False
     except pymssql.Error as e:

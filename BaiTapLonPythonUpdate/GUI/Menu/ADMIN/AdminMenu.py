@@ -70,17 +70,17 @@ class AdminMenu(tk.Frame):
 
         #--Button 1: Quản lý độc giả: để hiện ra phần quản lý độc giả
         #Mbutton
-        user_button = macButton(menu_frame, text = "Reader Manager", command = self.show_reader_manager, padx= 5)
+        user_button = macButton(menu_frame, text = "Quản lý độc giả", command = self.show_reader_manager, padx= 5)
         user_button.pack(side='left', padx=(5))
 
 
         #--Button 2: Quản lý nhân viên
-        staff_button = macButton(menu_frame, text= "Staff Manager", command = self.show_staff_menu_view, padx= 5)
+        staff_button = macButton(menu_frame, text= "Quản lý nhân viên", command = self.show_staff_menu_view, padx= 5)
         staff_button.pack(side='left', padx=(5))
 
 
         #--Menu 2: Quản lý sách (gồm đầu sách và bản sao)
-        book_menubutton = ttk.Menubutton(menu_frame, text = "Book Manager ")
+        book_menubutton = ttk.Menubutton(menu_frame, text = "Quản lý sách")
         book_menubutton.pack(side='left', padx=5)
 
         # Định nghĩa 1 menu cho MenuButton
@@ -88,16 +88,12 @@ class AdminMenu(tk.Frame):
         book_menubutton.config(menu=book_menu)
 
         # cho các label thả xuống vào cái menu đó
-        book_menu.add_command(label="Book Title Manager", command= self.show_book_manager_view)
-        book_menu.add_command(label="Book Copy Manager", command= self.show_copy_manager_view)
+        book_menu.add_command(label="Quản lý đầu sách", command= self.show_book_manager_view)
+        book_menu.add_command(label="Quản lý bản sao sách", command= self.show_copy_manager_view)
 
         #Button mượn trả
-        loan_button = macButton(menu_frame, text="Loan Manager", padx=5, command=self.show_loan_manager_view)
+        loan_button = macButton(menu_frame, text="Quản lý mượn trả", padx=5, command=self.show_loan_manager_view)
         loan_button.pack(side='left', padx=5)
-
-        #Button hiện 1 frame thống kê:
-        statistic_button = macButton(menu_frame, text = "Statistic")
-        statistic_button.pack(side='left', padx=5)
 
 
         # --- Button 4: Đăng xuất ---
@@ -107,7 +103,7 @@ class AdminMenu(tk.Frame):
 
 
     def _clear_content_frame(self):
-        """Hàm hỗ trợ: Xóa mọi thứ đang có trong content_frame."""
+        #Hàm hỗ trợ: Xóa mọi thứ đang có trong content_frame.
         if self.current_view:
             self.current_view.destroy()
         self.current_view = None

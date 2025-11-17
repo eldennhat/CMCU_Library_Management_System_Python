@@ -4,7 +4,7 @@ from tkmacosx import Button as macButton
 
 from controller.view_controller.Book_copy_controller import add_book_copy, fetch_book_ids, update_book_copy, \
     delete_book_copy, get_all_copies, search_book_copies
-from database.db_connector import get_db_connection
+
 
 BG_COLOR = "#EEEEEE"
 WINDOW_BG = "#54C5E8"
@@ -274,8 +274,8 @@ class BookCopyMenuView(tk.Frame):
         book_map = {}
         try:
             book_ids_list = fetch_book_ids()
-
-            for (book_id, title) in book_ids_list:
+            #Duyệt các list tuple đó
+            for (book_id, title) in book_ids_list: #Gán bookid là key, title là value
                 book_map[int(book_id)] = title
             return book_map
         except Exception as e:
@@ -283,7 +283,7 @@ class BookCopyMenuView(tk.Frame):
             return {}
 
     def update_book_id_options(self):
-        """Cập nhật OptionMenu với các BookID."""
+        #Cập nhật OptionMenu với các BookID
         menu = self.combo_book_id.nametowidget(self.combo_book_id.cget('menu'))
         menu.delete(0, 'end')
 
@@ -306,7 +306,7 @@ class BookCopyMenuView(tk.Frame):
 
             self.entry_book_title.config(state="normal")
             self.entry_book_title.delete(0, tk.END)
-            self.entry_book_title.insert(0, title)
+            self.entry_book_title.insert(0, title) #Thêm tiêu đề
             self.entry_book_title.config(state="readonly")
         except ValueError:
             pass  # Bỏ qua nếu ID không hợp lệ

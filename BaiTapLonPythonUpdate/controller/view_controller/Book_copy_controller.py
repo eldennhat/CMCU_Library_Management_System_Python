@@ -67,13 +67,16 @@ def fetch_book_ids():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        if not conn: return []
-        cursor.execute("SELECT BookId FROM Book")
-        book_ids = [str(row[0]) for row in cursor.fetchall()]
-        return book_ids #Danh sách Book ID
+        cursor.execute("SELECT BookId, Title FROM Book ORDER BY BookId")
+
+        # GHI CHÚ: fetchall() sẽ trả về list các tuple
+        book_id_list = cursor.fetchall()
+
+        return book_id_list
+
     except Exception as e:
-         print(f"Error when collecting Book IDs: {e}")
-         return []
+        print(f"Lỗi khi lấy Book IDs: {e}")
+        return []
     finally:
         if cursor: cursor.close()
         if conn: conn.close()

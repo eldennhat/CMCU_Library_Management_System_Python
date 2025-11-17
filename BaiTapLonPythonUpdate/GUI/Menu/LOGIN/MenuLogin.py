@@ -7,9 +7,8 @@ from tkmacosx import Button as macButton
 from GUI.define import PATH_IMAGE
 from controller.login_controller.auth_controller import check_login
 class LoginView(tk.Frame):
-    """
-    Frame chứa giao diện Đăng nhập với các tùy chỉnh về style.
-    """
+
+    #Frame chứa giao diện Đăng nhập với các tùy chỉnh về style.
 
     def _setup_background(self):
         image_path = os.path.join(PATH_IMAGE, "backgroundLogin.png")
@@ -50,8 +49,8 @@ class LoginView(tk.Frame):
         #
         title_label = tk.Label(
             login_frame,
-            text="LOGIN",
-            font=("Press Start 2P", 12, "bold"),
+            text="ĐĂNG NHẬP",
+            font=("Arial", 18, "bold"),
             foreground="black"
         )
         # Đặt title này ở hàng đầu tiên, căn giữa (columnspan=2)
@@ -61,8 +60,8 @@ class LoginView(tk.Frame):
         #tk.Label
         user_label = tk.Label(
             login_frame,
-            text="User name: ",
-            font=("Press Start 2P", 9)  # Đặt font trực tiếp
+            text="Tên tài khoản: ",
+            font=("Arial", 13, "bold")  # Đặt font trực tiếp
         )
         user_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
 
@@ -73,47 +72,25 @@ class LoginView(tk.Frame):
         # tk.Label
         pass_label = tk.Label(
             login_frame,
-            text="Password:",
-            font=("Press Start 2P", 9)  # Đặt font trực tiếp
+            text="Mật khẩu:",
+            font=("Arial", 13, "bold")  # Đặt font trực tiếp
         )
         pass_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
 
         self.pass_entry = ttk.Entry(login_frame, show="*", width=20)
         self.pass_entry.grid(row=2, column=1, padx=10, pady=5)
 
-        # --- HÀNG 3: Chọn vai trò (Admin or Librarian)
-        #1 label để hướng đẫn tích chọn
-        role_label = tk.Label(
-            login_frame, text="Role:", font=("Press Start 2P", 9)
-        )
-        role_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
 
-        #Box tick chọn
-        self.role_var = tk.StringVar() #check
-
-        self.role_combobox = ttk.Combobox(
-            login_frame,
-            textvariable=self.role_var,
-            values=("Admin", "Librarian"),
-            state="readonly",
-            width=18,
-        )
-        #set vị trí cho combobox
-        self.role_combobox.grid(row=3, column=1, padx=10, pady=5)
-        self.role_combobox.current(0) #Mặc định Admin
-
-
-
-        # --- HÀNG 4: Các nút bấm ---
+        # --- HÀNG 3: Các nút bấm ---
         #1 frame chưa các nút bấm
         button_frame = ttk.Frame(login_frame)
-        button_frame.grid(row=4, column=0, columnspan=2, pady=10)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=10)
 
         # 5. 2 nút bấmButton
         self.login_button = macButton(
             button_frame,
             text="Login",
-            font=("Press Start 2P", 9, "bold"),
+            font=("Arial", 12, "bold"),
             bg="#25A18E",
             fg="white",
             width=85,
@@ -122,7 +99,7 @@ class LoginView(tk.Frame):
             relief='raised',
             bordercolor="black",
             activebackground="green",
-            command=self._on_login_click, #nút bấm sẽ chạyh hàm _on_login
+            command=self._on_login_click, #nút bấm sẽ chạy hàm _on_login
         )
         self.login_button.pack(anchor= "center", padx=10)
 
@@ -130,17 +107,16 @@ class LoginView(tk.Frame):
     def _on_login_click(self):
         username = self.user_entry.get() #lấy dữ liệu từ các ô nhập vào
         password = self.pass_entry.get()
-        role = self.role_var.get()
 
-        if not username or not password or not role:
+        if not username or not password:
             messagebox.showwarning(message="Thiếu thông tin , Vui lòng nhập đủ thông tin") #Báo lỗi bằg 1 tin nhắn
             return
 
-        is_valid = check_login(username, password, role)
-        #Gọi hàm check: Hàm nhận 3 tham số để check trong csdl
+        role = check_login(username, password)
+        #Gọi hàm check: Hàm nhận 2 tham số để check trong csdl
         #Hàm check_login ở controller sẽ check xem có chuẩn thông tin không
 
-        if is_valid: #nếu chả về chuẩn check login sẽ true, và trả về role cho Main
+        if role: #nếu chả về chuẩn check login sẽ true, và trả về role cho Main
             self.on_login_callback(role)
         else:
             messagebox.showwarning(message="Đăng nhập thất bại! sai tên sai mk")

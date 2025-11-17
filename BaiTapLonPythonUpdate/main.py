@@ -54,7 +54,7 @@ class MainApplication(tk.Tk):
         self.current_frame = LibrarianMenu(self)
 
         self.geometry("1000x800")
-        self.title("Librarian")
+        self.title("Thủ thư")
         self.resizable(False, False)
 
 

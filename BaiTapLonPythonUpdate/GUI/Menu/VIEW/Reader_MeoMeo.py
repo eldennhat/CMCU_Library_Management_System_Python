@@ -20,6 +20,21 @@ class ReaderManagementView(tk.Frame):
         self.create_widgets()
         self.load_all_readers()
 
+    # ==== CÁC HÀM CHECK CÁC ENTRY =====
+    def only_letters(self, entry_widget):
+        text = entry_widget.get()
+        filtered = ''.join(ch for ch in text if ch.isalpha() or ch.isspace())
+        if text != filtered:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, filtered)
+
+    def only_numbers(self, entry_widget):
+        text = entry_widget.get()
+        filtered = ''.join(ch for ch in text if ch.isdigit())
+        if text != filtered:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, filtered)
+
 
     def create_widgets(self):
             # === Frame chính chứa toàn bộ nội dung ===
@@ -96,12 +111,14 @@ class ReaderManagementView(tk.Frame):
             lbl_full_name.grid(row=0, column=2, padx=5, pady=5, sticky="w")
             self.entry_full_name = tk.Entry(frame_details)
             self.entry_full_name.grid(row=0, column=3, padx=5, pady=5, sticky="ew")
+            self.entry_full_name.bind("<KeyRelease>", lambda e: self.only_letters(self.entry_full_name))
 
             #Label SĐT
             lbl_phone = tk.Label(frame_details, text="SĐT", font=APP_FONT)
             lbl_phone.grid(row=1, column=0, padx=5, pady=5, sticky="w")
             self.entry_phone = tk.Entry(frame_details)
             self.entry_phone.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+            self.entry_phone.bind("<KeyRelease>", lambda e: self.only_numbers(self.entry_phone))
 
             #Label Address
             lbl_address = tk.Label(frame_details, text="Địa chỉ", font=APP_FONT)

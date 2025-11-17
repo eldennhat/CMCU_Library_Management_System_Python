@@ -34,6 +34,21 @@ class StaffManagementView(tk.Frame):
         self.create_widgets()
         self.load_staff_data()
 
+        # ==== CÁC HÀM CHECK CÁC ENTRY =====
+    def only_letters(self, entry_widget):
+        text = entry_widget.get()
+        filtered = ''.join(ch for ch in text if ch.isalpha() or ch.isspace())
+        if text != filtered:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, filtered)
+
+    def only_numbers(self, entry_widget):
+        text = entry_widget.get()
+        filtered = ''.join(ch for ch in text if ch.isdigit())
+        if text != filtered:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, filtered)
+
     def create_widgets(self):
         main_frame = tk.Frame(self, bg=BG_COLOR)
         main_frame.pack(fill="both", expand=True, padx=10, pady=10)
@@ -98,12 +113,14 @@ class StaffManagementView(tk.Frame):
                                                                                         padx=5, pady=2)
         self.entry_full_name = tk.Entry(staff_form, textvariable=self.entry_vars["full_name"])
         self.entry_full_name.grid(row=1, column=1, sticky="we", padx=5, pady=2)
+        self.entry_full_name.bind("<KeyRelease>", lambda e: self.only_letters(self.entry_full_name))
 
         # Hàng 2: Phone
         tk.Label(staff_form, text="SĐT:", font=self.pixel_font, bg=BG_COLOR).grid(row=2, column=0, sticky="w", padx=5,
                                                                                     pady=2)
         self.entry_phone = tk.Entry(staff_form, textvariable=self.entry_vars["phone"])
         self.entry_phone.grid(row=2, column=1, sticky="we", padx=5, pady=2)
+        self.entry_phone.bind("<KeyRelease>", lambda e: self.only_numbers(self.entry_phone))
 
         # Hàng 3: Default Start
         tk.Label(staff_form, text="Giờ bắt đầu:", font=self.pixel_font, bg=BG_COLOR).grid(row=3, column=0, sticky="w",
@@ -145,14 +162,8 @@ class StaffManagementView(tk.Frame):
                                        )
         self.entry_password.grid(row=2, column=1, sticky="we", padx=5, pady=2)
 
-        # Hàng 3: Re-Password (
-        tk.Label(account_form, text="Nhập lại mật khẩu:", font=self.pixel_font, bg=BG_COLOR).grid(row=3, column=0, sticky="w",
-                                                                                            padx=5, pady=2)
-        self.entry_re_password = tk.Entry(account_form, textvariable=self.entry_vars["re_password"],
-                                         show="*")
-        self.entry_re_password.grid(row=3, column=1, sticky="we", padx=5, pady=2)
 
-        # 4. KHU VỰC HIỂN THỊ (BẢNG DỮ LIỆU)
+        # 3. KHU VỰC HIỂN THỊ (BẢNG DỮ LIỆU)
         display_frame = tk.Frame(main_frame)
         display_frame.pack(fill="both", expand=True, padx=10, pady=10, side="top")
 
@@ -263,17 +274,12 @@ class StaffManagementView(tk.Frame):
 
         username = self.entry_vars["username"].get()
         password = self.entry_vars["password"].get()
-        re_password = self.entry_vars["re_password"].get()
         role = self.entry_vars["position"].get()
 
         # 2. Kiểm tra
         if not full_name or not phone or not username or not password or not role:
             messagebox.showwarning("Thiếu thông tin", "Phải nhập: Full Name, Phone, Username, Password, và Position.",
                                    parent=self)
-            return
-
-        if password != re_password:
-            messagebox.showerror("Lỗi Mật khẩu", "Mật khẩu nhập lại không khớp!", parent=self)
             return
 
         # 3. Kiểm tra xem có đang chọn hàng nào không (phải ở chế độ ADD)
