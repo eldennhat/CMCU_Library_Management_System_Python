@@ -137,9 +137,9 @@ go
 
 insert into Reader(FullName, Phone, [Address])
 values
-	(N'Đầu', '098765', N'Khu 3 Hoàng Cương'),
-	(N'Cắt', '098764', N'Thanh Ba'),
-	(N'Moi', '09873', N'Phú Thọ')
+	(N'Khuất Thuỳ Linh', '0987653213', N'Khu 3 Hoàng Cương'),
+	(N'Nguyễn Duy Anh', '0987641345', N'Thanh Ba'),
+	(N'Hà Văn Võ Quyền', '0987343526', N'Phú Thọ')
 go
 
 
