@@ -85,9 +85,7 @@ def get_all_copies():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        sql = ("SELECT bc.CopyId, bc.BookId, b.Title, bc.PublisherName, bc.Status, bc.Barcode, bc.BookMoney, bc.StorageNote "
-               "FROM BookCopy as bc JOIN Book as b "
-               "ON bc.BookId = b.BookId")
+        sql = "SELECT * FROM v_Copies ORDER BY BookId"
         cursor.execute(sql)
         rows = cursor.fetchall()
         return rows
@@ -110,17 +108,8 @@ def search_book_copies(keyword):
 
     #  Query này JOIN 2 bảng và tìm theo Title
     query = """
-            SELECT bc.CopyId, \
-                   bc.BookId, \
-                   b.Title, \
-                   bc.PublisherName, \
-                   bc.Status, \
-                   bc.Barcode, \
-                   bc.BookMoney, \
-                   bc.StorageNote
-            FROM BookCopy as bc
-                     JOIN Book as b ON bc.BookId = b.BookId
-            WHERE b.Title LIKE %s \
+            SELECT * FROM v_Copies
+            WHERE Title LIKE %s
             """
     search_term = f"%{keyword}%"  # Thêm dấu %
 

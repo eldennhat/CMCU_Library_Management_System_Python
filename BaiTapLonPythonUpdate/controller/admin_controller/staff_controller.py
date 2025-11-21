@@ -46,12 +46,10 @@ def get_all_staff_details():
         return None
 
     cursor = conn.cursor()
-    # GHI CHÚ: Lấy các cột khớp với Treeview
+    # Lấy các cột khớp với Treeview
     sql = """
-          SELECT s.StaffId, s.FullName, a.[Role], s.Phone, a.Username, a.PasswordHash
-          FROM Staff AS s
-                   JOIN Account AS a ON s.StaffId = a.StaffId
-          ORDER BY s.StaffId
+          SELECT * FROM v_Staff
+          ORDER BY StaffId
           """
     try:
         cursor.execute(sql)
@@ -72,19 +70,10 @@ def get_staff_details_by_id(staff_id):
     if not conn:
         return None
 
-    cursor = conn.cursor(as_dict=True)  # Dùng as_dict=True cho dễ
+    cursor = conn.cursor(as_dict = True)
     sql = """
-          SELECT s.StaffId, \
-                 s.FullName, \
-                 s.Phone, \
-                 s.DefaultStart, \
-                 s.DefaultEnd, \
-                 a.Username, \
-                 a.[Role],\
-                 a.PasswordHash
-          FROM Staff AS s
-                   JOIN Account AS a ON s.StaffId = a.StaffId
-          WHERE s.StaffId = %s
+          SELECT * FROM v_Staff
+          WHERE StaffId = %s
           """
     try:
         cursor.execute(sql, (staff_id,))
@@ -142,7 +131,7 @@ def update_staff_details(staff_id, full_name, phone, start_time, end_time, role)
 
 
 def delete_staff_and_account(staff_id):
-    #Xóa nhân viên (Phải xóa Account trước, rồi xóa Staff).
+    #Xóa nhân viên ( xóa Account trước, rồi xóa Staff).
     conn = get_db_connection()
     if not conn:
         return False

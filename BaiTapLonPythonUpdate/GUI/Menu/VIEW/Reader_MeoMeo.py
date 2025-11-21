@@ -87,7 +87,7 @@ class ReaderManagementView(tk.Frame):
             self.entry_reader_name_phone_search = tk.Entry(frame_search, width=20)
             self.entry_reader_name_phone_search.pack(side="left", fill="x", expand=True, padx=5)
             self.btn_search = macButton(
-                frame_search, text="Find", command=self.on_find_reader_click,
+                frame_search, text="Tìm kiếm", command=self.on_find_reader_click,
                 font=APP_FONT, borderwidth=4, relief="raised", bg = "green", fg="white",
             )
             self.btn_search.pack(side= "left", padx=10)

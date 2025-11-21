@@ -59,17 +59,18 @@ class LoanDetailView(tk.Toplevel):
         tk.Label(info_frame, text=str(loan_info['DueDate'])).grid(row=2, column=3, sticky="w", padx=5, pady=2)
 
         #Nạp dữ liệu vào bảng sách
-        columns = ("copy_id", "title", 'returned',"deposit","fine")
+        columns = ("loan_id", "copy_id", "title", 'returned',"deposit","fine")
         tree = ttk.Treeview(books_frame, columns=columns)
         tree.pack(fill="both", expand= True)
 
+        tree.heading("loan_id", text="ID phiếu mượn")
         tree.heading("copy_id", text="ID bản sao")
         tree.heading("title", text="Tên sách")
         tree.heading("returned", text="Ngày trả")
         tree.heading("deposit", text = "Tiền cọc")
         tree.heading("fine", text = "Tiền phạt")
 
-
+        tree.column("loan_id", width=50)
         tree.column("copy_id", width=80)
         tree.column("title", width=250)
         tree.column("returned", width=100)
@@ -82,6 +83,7 @@ class LoanDetailView(tk.Toplevel):
             fine = f"{book['Fine']:,.0f}" if book['Fine'] else "0"
 
             tree.insert("", "end", values=(
+                book['LoanId'],
                 book['CopyId'],
                 book['BookTitle'],
                 returned_date,

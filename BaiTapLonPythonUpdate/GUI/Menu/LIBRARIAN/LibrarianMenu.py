@@ -68,7 +68,7 @@ class LibrarianMenu(tk.Frame):
         menu_frame.pack(fill="x", side="top", padx=0, pady=0)
 
         # --- Menu 1: Quản lý Sách/ Đầu sách ---
-        book_menubutton = ttk.Menubutton(menu_frame, text=" Book Manager ")
+        book_menubutton = ttk.Menubutton(menu_frame, text=" Quản lý sách ")
         book_menubutton.pack(side='left', padx=5)
 
         # Định nghĩa 1 menu cho MenuButton
@@ -76,20 +76,20 @@ class LibrarianMenu(tk.Frame):
         book_menubutton.config(menu=book_menu)
 
         # cho các label thả xuống vào cái menu đó
-        book_menu.add_command(label="Book Title Manager", command=self.show_book_manager_view)
-        book_menu.add_command(label="Book Copy Manager",command= self.show_book_copy_manager)
+        book_menu.add_command(label="Quản lý đầu sách", command=self.show_book_manager_view)
+        book_menu.add_command(label="Quản lý bản sao sách",command= self.show_book_copy_manager)
 
 
         # --- Button 2: Quản lý Mượn/Trả ---
-        loan_button = macButton(menu_frame, text=" Loan Manager ", command=self.show_loan_manager_view)
+        loan_button = macButton(menu_frame, text=" Quản lý mượn/trả", command=self.show_loan_manager_view)
         loan_button.pack(side='left', padx=30)
 
         #--- Button 3: Quản Lý Độc giả ---
-        user_button = macButton(menu_frame, text="Reader Manager", padx=5, command = self.show_reader_manager)
+        user_button = macButton(menu_frame, text="Quản lý độc giả", padx=5, command = self.show_reader_manager)
         user_button.pack(side='left', padx=30)
 
         # --- Button 4: Đăng xuất ---
-        logout_button = macButton(menu_frame, text="Log Out", padx=5,command=self.logout)
+        logout_button = macButton(menu_frame, text="Đăng xuất", padx=5,command=self.logout)
         logout_button.pack(side='left', padx=30)
 
 
@@ -105,10 +105,10 @@ class LibrarianMenu(tk.Frame):
         self._clear_content_frame()
         self.current_view = ttk.Label(
             self.content_frame,
-            text="Welcome Librarian",
-            font=(FONT_PIXELS, 40, "bold")
+            text=" Welcome\nLibrarian",
+            font=(FONT_PIXELS, 60, "bold")
         )
-        self.current_view.pack(pady=50, padx=50)
+        self.current_view.pack(pady=300, padx=100)
 
     def show_book_manager_view(self):
         self._clear_content_frame()

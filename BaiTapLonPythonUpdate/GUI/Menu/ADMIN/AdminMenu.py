@@ -113,10 +113,10 @@ class AdminMenu(tk.Frame):
         self._clear_content_frame()
         self.current_view = ttk.Label(
             self.content_frame,
-            text = "Welcome Admin",
-            font = ("Press Start 2P", 45, "bold"),
+            text = " Welcome\n  Admin",
+            font = ("Press Start 2P", 60, "bold"),
         )
-        self.current_view.pack(padx=50, pady=50)
+        self.current_view.pack(padx=100, pady=300)
 
     #CÁC HÀM LIÊN QUAN ĐẾN QUẢN LÝ ĐỘC GIẢ
     def show_reader_manager(self):

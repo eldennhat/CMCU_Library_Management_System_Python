@@ -35,6 +35,13 @@ class BookCopyMenuView(tk.Frame):
         # 3. Tải bảng
         self.load_all_copies()
 
+    def only_numbers(self, entry_widget):
+        text = entry_widget.get()
+        filtered = ''.join(ch for ch in text if ch.isdigit())
+        if text != filtered:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, filtered)
+
     def create_widgets(self):
         tab_control = ttk.Notebook(self)
         # Bạn có thể tạo các tab khác ở đây
@@ -130,10 +137,11 @@ class BookCopyMenuView(tk.Frame):
         self.entry_barcode.grid(row=2, column=3, padx=5, pady=5, sticky="ew")
 
         # Hàng 3: Price & Status
-        lbl_price = tk.Label(frame_details, text="Giá tiền:", font=self.app_font, bg=BG_COLOR)
+        lbl_price = tk.Label(frame_details, text="Giá tiền (VNĐ):", font=self.app_font, bg=BG_COLOR)
         lbl_price.grid(row=3, column=0, padx=5, pady=5, sticky="w")
         self.entry_price = tk.Entry(frame_details, font=self.app_font)
         self.entry_price.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+        self.entry_price.bind("<KeyRelease>", lambda e: self.only_numbers(self.entry_price))
 
         lbl_status = tk.Label(frame_details, text="Trạng thái:", font=self.app_font, bg=BG_COLOR)
         lbl_status.grid(row=3, column=2, padx=5, pady=5, sticky="w")
@@ -154,7 +162,7 @@ class BookCopyMenuView(tk.Frame):
         frame_tree.pack(fill="both", expand=True, padx=10, pady=10, side="top")
 
         scrollbar = ttk.Scrollbar(frame_tree, orient="vertical")
-        columns = ("CopyId", "BookId", "Title", "Publisher", "Status", "Barcode", "Price", "StorageNote")
+        columns = ("CopyId", "BookId", "Title", "Publisher", "Status", "Barcode", "Price", "StorageNote", "StatusInt")
         self.tree_copies = ttk.Treeview(
             frame_tree,
             columns=columns,
@@ -173,14 +181,15 @@ class BookCopyMenuView(tk.Frame):
         self.tree_copies.heading("StorageNote", text="Vị trí/Kệ")
 
         # Căn chỉnh độ rộng cột
-        self.tree_copies.column("CopyId", width=60, anchor="center")
-        self.tree_copies.column("BookId", width=60, anchor="center")
+        self.tree_copies.column("CopyId", width=60)
+        self.tree_copies.column("BookId", width=60)
         self.tree_copies.column("Title", width=200)
         self.tree_copies.column("Publisher", width=150)
-        self.tree_copies.column("Status", width=80, anchor="center")
+        self.tree_copies.column("Status", width=80)
         self.tree_copies.column("Barcode", width=120)
-        self.tree_copies.column("Price", width=80, anchor="e")
+        self.tree_copies.column("Price", width=80)
         self.tree_copies.column("StorageNote", width=150)
+        self.tree_copies.column("Status", width=80, stretch= False)
 
         scrollbar.config(command=self.tree_copies.yview)
         scrollbar.pack(side="right", fill="y")
@@ -209,9 +218,21 @@ class BookCopyMenuView(tk.Frame):
 
             self.entry_publisher.insert(0, values[3])  # PublisherName
 
-            status_val = str(values[4])
-            status_text = f"{status_val} ({'Có sẵn' if status_val == '0' else 'Đang mượn' if status_val == '1' else 'Hư hỏng' if status_val == '2' else 'Đã mất'})"
-            self.status_var.set(status_text)
+            # values[4] là chữ tiếng Việt  Hiển thị trên bảng
+            # values[8] là số (0) -> Dùng để set Combobox
+
+            status_int = str(values[8])
+            # Map số sang chuỗi trong Combobox
+            status_map = {
+                '0': '0 (Có sẵn)',
+                '1': '1 (Đang mượn)',
+                '2': '2 (Hư hỏng)',
+                '-1': '-1 (Đã mất)'
+            }
+            # Set giá trị cho Combobox dựa trên số lấy được
+            if status_int in status_map:
+                self.status_var.set(status_map[status_int])
+
 
             self.entry_barcode.insert(0, values[5])  # Barcode
             self.entry_price.insert(0, str(values[6]))  # BookMoney
@@ -270,7 +291,7 @@ class BookCopyMenuView(tk.Frame):
 
     def load_book_id_and_titles(self):
         # Lấy BookId VÀ Title từ CSDL.
-        # (GHI CHÚ: File controller của bạn đã làm điều này)
+        #
         book_map = {}
         try:
             book_ids_list = fetch_book_ids()

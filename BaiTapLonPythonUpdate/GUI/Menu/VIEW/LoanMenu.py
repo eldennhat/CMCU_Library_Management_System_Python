@@ -14,7 +14,8 @@ sys.path.append(project_root)
 
 # GHI CHÚ: Import các controller
 from GUI.Menu.VIEW.LoanDetailView import LoanDetailView
-from controller.view_controller.Loan_controller import create_new_loan, return_book_copy, delete_loan
+from controller.view_controller.Loan_controller import create_new_loan, return_book_copy, delete_loan, get_loan_details, \
+    _load_combobox_data
 from database.db_connector import get_db_connection
 import datetime
 
@@ -53,71 +54,53 @@ class LoanMenu(tk.Frame):
         self._setup_widgets()
         self._load_combobox_data()
 
-    # ======CÁC HÀM PHỤ TRỢ CHO DATABASE=========
-    # Hàm phụ trợ để chạy truy vấn
-    def _fetch_data_from_db(self, query):
-        # Hàm phụ trợ để chạy truy vấn SELECT."""
-        conn = None
-        cursor = None
-        try:
-            conn = get_db_connection()
-            if not conn:
-                return []
-            cursor = conn.cursor(as_dict=True)
-            cursor.execute(query)
-            return cursor.fetchall()
-        except pymssql.Error as e:
-            messagebox.showerror("Lỗi CSDL", f"Lỗi truy vấn dữ liệu:\n{e}", parent=self)
-            return []
-        finally:
-            if cursor: cursor.close()
-            if conn: conn.close()
-
-    # Để load dữ liệu từ bảng sau khi thực hiện các câu lệnh Add
+    # ======CÁC HÀM PHỤ TRỢ=========
+    # Load các dữ liệu vào các combobox
     def _load_combobox_data(self):
-        # Tải dữ liệu cho cả 3 combobox.
-        # 1. Tải Độc giả ( vào readerlist bằng lệnh truy vấn
-        self.readers_list = self._fetch_data_from_db("SELECT ReaderId, FullName FROM Reader ORDER BY FullName")
+       #Gọi controller
+        self.readers_list, self.staff_list, self.copies_list, onloan_list = _load_combobox_data()
+
+        # 1. Tải các độc giả
+        #Định nghĩa lại chuỗi thông tin cho độc giả để gửi lên combobox
         reader_display_list = [f"ID: {r['ReaderId']} - Tên: {r['FullName']}" for r in self.readers_list]
         if hasattr(self, 'reader_combobox'):
             self.reader_combobox['values'] = reader_display_list
 
-        # 2. Tải Nhân viên (Staff)
-        # Tải các nhân viên vào list
-        self.staff_list = self._fetch_data_from_db("SELECT StaffId, FullName FROM Staff ORDER BY FullName")
+        # 2. Tải Nhân viên
         staff_display_list = [f"ID: {s['StaffId']} - Tên: {s['FullName']}" for s in self.staff_list]
         if hasattr(self, 'staff_combobox'):
             self.staff_combobox['values'] = staff_display_list
 
         # 3. Tải Sách  - Chỉ những sách "Available" (Status = 0)
-        query_available = """
-                          SELECT c.CopyId, b.Title
-                          FROM BookCopy c
-                                   JOIN Book b ON c.BookId = b.BookId
-                          WHERE c.Status = 0
-                          ORDER BY b.Title
-                          """
-        # Lưu các copy mà còn mượn được
-        self.copies_list = self._fetch_data_from_db(query_available)
         copy_display_list = [f"CopyID: {c['CopyId']} - Tên: {c['Title']}" for c in self.copies_list]
         if hasattr(self, 'copy_id_combobox'):
             self.copy_id_combobox['values'] = copy_display_list
 
         # 4. Tải sách ĐANG MƯỢN (Status = 1) cho tab TRẢ SÁCH
-        query_onloan = """
-                       SELECT c.CopyId, b.Title
-                       FROM BookCopy c
-                                JOIN Book b ON c.BookId = b.BookId
-                       WHERE c.Status = 1
-                       ORDER BY c.CopyId
-                       """
-        # Trả ra các
-        onloan_list = self._fetch_data_from_db(query_onloan)
         onloan_display = [f"CopyID: {c['CopyId']} - {c['Title']}" for c in onloan_list]
         if hasattr(self, 'copy_id_return_combobox'):
             self.copy_id_return_combobox['values'] = onloan_display
 
-    # Hàm set up các widgets cho giao diện
+
+     # HÀM  HỖ TRỢ LẤY DỮ LIỆU ID TỪ COMBOBOX
+    def _get_id_from_combobox(self, combo_var, data_list, key_name):
+        # Lấy ID từ text combobox
+        display_text = combo_var.get()  # Combo_var là các combobox có chứa ID để chọn
+        if not display_text:
+            return None
+
+        # Tách ID từ chuỗi ví dụ "ID: 123 - ..."
+        try:
+            id_part = display_text.split("-")[0].strip()
+            # GHI CHÚ: Sửa lại để lấy cả "CopyID"
+            id_value = id_part.split(":")[-1].strip()
+            return int(id_value)
+        except Exception as e:
+            print(f"Lỗi khi lấy ID từ combobox: {e}, Text: {display_text}")
+            return None
+
+
+    # HÀM SET UP GIAO DIỆN
     def _setup_widgets(self):
         # Khung
         notebook = ttk.Notebook(self)
@@ -138,7 +121,7 @@ class LoanMenu(tk.Frame):
         notebook.add(view_all_frame, text="Hiện thị chi tiết")
         self._create_view_all_tab(view_all_frame)
 
-    # ======================== 3 TAB CHỨC NĂNG CỦA LOAN MANAGER===============================
+    # ======================== 3 TAB CHỨC NĂNG CỦA QUẢN LÝ MƯỢN TRẢ===============================
     # Tab tạo phiếu mượn
     def _create_loan_tab(self, parent):
         info_frame = tk.LabelFrame(parent, text="Thông tin phiếu mượn", font=self.font_bold)
@@ -220,7 +203,6 @@ class LoanMenu(tk.Frame):
         self.loan_tree.heading("Title", text="Tiêu đề")
         self.loan_tree.column("CopyId", width=300, anchor="center")
         self.loan_tree.column("Title", width=500)
-        #   grid(), columnspan=2 (chiếm 2 cột), sticky="nsew"
         self.loan_tree.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
     # Tab Trả sách
@@ -232,13 +214,13 @@ class LoanMenu(tk.Frame):
         tk.Label(main_frame, text="ID bản sao (Đang được mượn):", font=self.font).grid(row=0, column=0, padx=5, pady=10,
                                                                                        sticky="w")
         self.copy_id_return_combobox = ttk.Combobox(main_frame, textvariable=self.copy_id_to_return_var,
-                                                    state="readonly", width=30, font="Arial")  # GHI CHÚ: Thêm font
+                                                    state="readonly", width=30, font="Arial")
         self.copy_id_return_combobox.grid(row=0, column=1, padx=5, pady=10, sticky="ew")
 
         ttk.Label(main_frame, text="Ngày trả thực tế (Y-M-D):", font=self.font).grid(row=1, column=0, padx=5, pady=10,
                                                                                      sticky="w")
         return_date_entry = tk.Entry(main_frame, textvariable=self.return_date_date_var, width=30,
-                                     font=self.font)  # GHI CHÚ: Thêm font
+                                     font=self.font)
         return_date_entry.grid(row=1, column=1, padx=5, pady=10, sticky="ew")
 
         # GHI CHÚ: Gộp Giờ và Phút
@@ -275,10 +257,8 @@ class LoanMenu(tk.Frame):
                                   borderwidth=4, relief="raised")
         delete_button.pack(side="left", fill="x", expand=True, padx=(5, 0))
 
-        # GHI CHÚ: Xóa dòng pack() thừa
-        # refresh_button.pack(pady=10, fill="x")
 
-        # GHI CHÚ: Pack tree_frame (bảng) ở dưới cùng
+
         tree_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
         scrollbar = ttk.Scrollbar(tree_frame, orient="vertical")
@@ -315,55 +295,23 @@ class LoanMenu(tk.Frame):
         self._load_all_loan_details()
 
     # ====================================== CÁC HÀM CHỨC NĂNG ==========================================================
+    # ==CÁC HÀM CHO TAB VIEW ALL==
     # HÀM LOAD LẠI TẤT CẢ DATA PHỤ TRỢ CHO TAB VIEW ALL
     def _load_all_loan_details(self):
         # Tải tất cả chi tiết phiếu mượn với thông tin đầy đủ."""
         for item in self.view_all_tree.get_children():
             self.view_all_tree.delete(item)
 
-        conn = None
-        cursor = None
-        try:
-            conn = get_db_connection()
-            if not conn:
-                messagebox.showerror("Error", "Không thể kết nối với CSDL", parent=self)
-                return
+        #Gọi controller
+        rows = get_loan_details()
+        for row in rows:  # insert vào tree
+            self.view_all_tree.insert("", tk.END, values=row)
 
-            cursor = conn.cursor()
-            # Query lấy tất cả dữ liệu có liên quan
-            sql_query = """
-                        SELECT 
-                               l.LoanId,
-                               d.CopyId,
-                               b.Title    AS BookTitle,
-                               d.ReturnedDate,
-                               s.FullName AS StaffName,
-                               r.FullName AS ReaderName,
-                               r.ReaderId,
-                               d.Fine,
-                               d.Deposit
-                        FROM LoanDetail AS d
-                                 JOIN Loan AS l ON d.LoanId = l.LoanId
-                                 JOIN BookCopy AS c ON d.CopyId = c.CopyId
-                                 JOIN Book AS b ON c.BookId = b.BookId
-                                 JOIN Staff AS s ON l.StaffId = s.StaffId
-                                 JOIN Reader AS r ON l.ReaderId = r.ReaderId
-                        ORDER BY l.LoanId DESC
-                        """
-            cursor.execute(sql_query)
-            rows = cursor.fetchall()
-            for row in rows:  # insert vào tree
-                self.view_all_tree.insert("", tk.END, values=row)
-        except pymssql.Error as e:
-            messagebox.showerror("Database Error", f"Không thể load dữ liệu:\n{e}", parent=self)
-        finally:
-            if cursor: cursor.close()
-            if conn: conn.close()
 
     # hàm hỗ trợ click đúp
     def _on_tree_double_click(self, event):
 
-        # Được gọi khi người dùng double-click vào một hàng trong Tab 'View All'.
+        # Được gọi khi người dùng double-click vào một hàng trong Tab View All.
 
         # 1. Lấy hàng được chọn
         selected_item = self.view_all_tree.focus()
@@ -390,24 +338,48 @@ class LoanMenu(tk.Frame):
         # 6. Tải lại dữ liệu
         self._load_all_loan_details()
 
-    # HÀM LẤY DỮ LIỆU ID  TỪ COMBOBOX
-    def _get_id_from_combobox(self, combo_var, data_list, key_name):
-        # Lấy ID từ text combobox
-        display_text = combo_var.get()  # Combo_var là các combobox có chứa ID để chọn
-        if not display_text:
-            return None
+    # Hàm cho nút xoá 1 phiếu mượn ở tab view all
+    def _on_delete_loan_click(self):
+        # Được gọi khi nhấn nút 'Delete Selected Loan' ở Tab Chi tiết
+        # 1. Lấy hàng được chọn
+        selected_item = self.view_all_tree.focus()
+        if not selected_item:
+            messagebox.showwarning("Chưa chọn", "Vui lòng chọn một phiếu mượn từ bảng để xóa.", parent=self)
+            return
 
-        # Tách ID từ chuỗi ví dụ "ID: 123 - ..."
+        # 2. Lấy dữ liệu của hàng đó
+        values = self.view_all_tree.item(selected_item, "values")
+
         try:
-            id_part = display_text.split("-")[0].strip()
-            # GHI CHÚ: Sửa lại để lấy cả "CopyID"
-            id_value = id_part.split(":")[-1].strip()
-            return int(id_value)
-        except Exception as e:
-            print(f"Lỗi khi lấy ID từ combobox: {e}, Text: {display_text}")
-            return None
+            # Cột 1 (index 0) là LoanId
+            loan_id = int(values[0])
+        except (IndexError, ValueError):
+            messagebox.showerror("Lỗi", "Không thể lấy LoanId từ hàng đã chọn.", parent=self)
+            return
+
+        # 3. Hỏi xác nhận
+        if not messagebox.askyesno("Xác nhận XÓA",
+                                   f"Bạn có chắc muốn xóa TOÀN BỘ Phiếu Mượn ID: {loan_id}?\n\n"
+                                   "CẢNH BÁO: Mọi chi tiết mượn/trả của phiếu này sẽ bị xóa VĨNH VIỄN, "
+                                   "và các sách liên quan (nếu chưa trả) sẽ được trả về 'Available'.",
+                                   parent=self, icon='warning'):
+            return
+
+        # 4. Gọi Controller
+        success, message = delete_loan(loan_id)
+
+        if success:
+            messagebox.showinfo("Thành công", message, parent=self)
+            # 5. Tải lại MỌI THỨ
+            self._load_all_loan_details()  # Tải lại Tab 3
+            self._load_combobox_data()  # Tải lại sách 'Available' và 'OnLoan'
+        else:
+            messagebox.showerror("Lỗi CSDL", message, parent=self)
+
+
 
     # */===============================/**/===============================/**/===============================/*
+    # CÁC HÀM SỰ KIỆN CHO TAB MƯỢN SÁCH
     # SỰ KIỆN CHO NÚT THÊM SÁCH MƯỢN
     def _on_add_book_to_list(self):
         # Lấy copy id từ combobox
@@ -505,7 +477,7 @@ class LoanMenu(tk.Frame):
         else:
             messagebox.showerror("Lỗi", message, parent=self)
 
-    # HÀM SỰ KIÊN CHO MENU TRẢ SÁCH
+    # =======HÀM SỰ KIÊN CHO TAB TRẢ SÁCH======
     def _on_return_book(self):
         # 1. Lấy Copy ID từ combobox
         copy_id = self._get_id_from_combobox(self.copy_id_to_return_var, [], 'CopyId')
@@ -547,44 +519,7 @@ class LoanMenu(tk.Frame):
         else:
             messagebox.showerror("Lỗi", message, parent=self)
 
-    def _on_delete_loan_click(self):
 
-        # Được gọi khi nhấn nút 'Delete Selected Loan' ở Tab 3.
-
-        # 1. Lấy hàng được chọn
-        selected_item = self.view_all_tree.focus()
-        if not selected_item:
-            messagebox.showwarning("Chưa chọn", "Vui lòng chọn một phiếu mượn từ bảng để xóa.", parent=self)
-            return
-
-        # 2. Lấy dữ liệu của hàng đó
-        values = self.view_all_tree.item(selected_item, "values")
-
-        try:
-            # Cột 1 (index 0) là LoanId
-            loan_id = int(values[0])
-        except (IndexError, ValueError):
-            messagebox.showerror("Lỗi", "Không thể lấy LoanId từ hàng đã chọn.", parent=self)
-            return
-
-        # 3. Hỏi xác nhận
-        if not messagebox.askyesno("Xác nhận XÓA",
-                                   f"Bạn có chắc muốn xóa TOÀN BỘ Phiếu Mượn ID: {loan_id}?\n\n"
-                                   "CẢNH BÁO: Mọi chi tiết mượn/trả của phiếu này sẽ bị xóa VĨNH VIỄN, "
-                                   "và các sách liên quan (nếu chưa trả) sẽ được trả về 'Available'.",
-                                   parent=self, icon='warning'):
-            return
-
-        # 4. Gọi Controller
-        success, message = delete_loan(loan_id)
-
-        if success:
-            messagebox.showinfo("Thành công", message, parent=self)
-            # 5. Tải lại MỌI THỨ
-            self._load_all_loan_details()  # Tải lại Tab 3
-            self._load_combobox_data()  # Tải lại sách 'Available' và 'OnLoan'
-        else:
-            messagebox.showerror("Lỗi CSDL", message, parent=self)
 
     def _clear_loan_form(self):
         """Xóa form sau khi tạo loan thành công."""

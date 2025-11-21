@@ -1,10 +1,11 @@
+from tkinter import messagebox
+
 import pymssql
 from database.db_connector import get_db_connection
 
 #======HÀM TẠO PHIẾU MƯỢN========
 def create_new_loan(reader_id, staff_id, due_date, list_of_copy_ids):
     #Tham số ID độc giả, ID nhân viên, hạn trả sách, và list các copyID
-
     # Tạo phiếu mượn mới và cập nhật trạng thái sách.
     #     reader_id (int): ID của độc giả
     #     staff_id (int): ID của nhân viên (người cho mượn)
@@ -93,17 +94,13 @@ def create_new_loan(reader_id, staff_id, due_date, list_of_copy_ids):
 
 
 def return_book_copy(copy_id, returned_datetime_str):
-    #
     # Xử lý việc trả một bản sao sách với ngày giờ chỉ định.
     # Trigger trong CSDL sẽ tự động tính tiền phạt (Fine).
-    #
     # Args:
     #     copy_id (int): ID của sách cần trả
     #     returned_datetime_str (str): Ngày giờ trả (YYYY-MM-DD HH:MI:SS)
-    #
     # Returns:
     #     tuple: (success: bool, message: str)
-    #
     conn = get_db_connection()
     if conn is None:
         return (False, "Lỗi kết nối CSDL")
@@ -133,7 +130,7 @@ def return_book_copy(copy_id, returned_datetime_str):
                        SELECT Fine
                        FROM LoanDetail
                        WHERE CopyId = %s
-                         AND ReturnedDate = %s
+                        AND ReturnedDate = %s
                        """, (copy_id, returned_datetime_str))
 
         fine_result = cursor.fetchone()
@@ -177,33 +174,14 @@ def get_loan_details_by_id(loan_id):
 
     try:
         # Query 1: Lấy thông tin chung của Phiếu Mượn
-        query_info = """
-                     SELECT l.LoanId, \
-                            l.LoanDate, \
-                            l.DueDate, \
-                            r.FullName AS ReaderName, \
-                            r.Phone    AS ReaderPhone, \
-                            s.FullName AS StaffName
-                     FROM Loan AS l
-                              JOIN Reader AS r ON l.ReaderId = r.ReaderId
-                              JOIN Staff AS s ON l.StaffId = s.StaffId
-                     WHERE l.LoanId = %s \
-                     """
+        # Sử dụng View đã thêm ở CSDL
+        query_info = "SELECT * FROM v_LoanInfo WHERE LoanId = %s"
         cursor.execute(query_info, (loan_id,))
         loan_info = cursor.fetchone()  # Chỉ có 1 hàng
 
+
         # Query 2: Lấy danh sách Sách trong phiếu mượn đó
-        query_books = """
-                      SELECT d.CopyId, \
-                             b.Title AS BookTitle, \
-                             d.ReturnedDate, \
-                             d.Deposit,\
-                             d.Fine
-                      FROM LoanDetail AS d
-                               JOIN BookCopy AS c ON d.CopyId = c.CopyId
-                               JOIN Book AS b ON c.BookId = b.BookId
-                      WHERE d.LoanId = %s \
-                      """
+        query_books = "Select * FROM v_LoanBookDetails WHERE LoanId = %s"
         cursor.execute(query_books, (loan_id,))
         book_list = cursor.fetchall()  # Có thể có nhiều hàng
 
@@ -216,6 +194,32 @@ def get_loan_details_by_id(loan_id):
         if conn:
             cursor.close()
             conn.close()
+
+#Hàm Controller hỗ trợ Cho hàm load_all_loan_details
+def get_loan_details():
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        if not conn:
+            messagebox.showerror("Error", "Không thể kết nối với CSDL")
+            return
+
+        cursor = conn.cursor()
+        # Query lấy tất cả dữ liệu có liên quan từ view đã làm
+        sql_query = """
+                    SELECT * FROM v_LoanDetails
+                    ORDER BY LoanId DESC
+                    """
+        cursor.execute(sql_query)
+        details = cursor.fetchall()
+        return (details)
+    except pymssql.Error as e:
+        messagebox.showerror("Database Error", f"Không thể load dữ liệu:\n{e}")
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
 
 
 def delete_loan(loan_id):
@@ -258,3 +262,61 @@ def delete_loan(loan_id):
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
+
+
+
+# Hàm phụ trợ để chạy truy vấn
+def _fetch_data_from_db(query):
+        # Hàm phụ trợ để chạy truy vấn SELECT."""
+        conn = None
+        cursor = None
+        try:
+            conn = get_db_connection()
+            if not conn:
+                return []
+            cursor = conn.cursor(as_dict=True)
+            cursor.execute(query)
+            return cursor.fetchall()
+        except pymssql.Error as e:
+            messagebox.showerror("Lỗi CSDL", f"Lỗi truy vấn dữ liệu:\n{e}")
+            return []
+        finally:
+            if cursor: cursor.close()
+            if conn: conn.close()
+
+
+def _load_combobox_data():
+    # Tải dữ liệu cho cả các combobox.
+    # 1. Tải Độc giả ( vào readerlist bằng lệnh truy vấn)
+    readers_list = _fetch_data_from_db("SELECT ReaderId, FullName FROM Reader ORDER BY FullName")
+
+    # 2. Tải Nhân viên (Staff)
+    # Tải các nhân viên vào list
+    staff_list = _fetch_data_from_db("SELECT StaffId, FullName FROM Staff ORDER BY FullName")
+
+
+    # 3. Tải Sách  - Chỉ những sách "Available" (Status = 0)
+    query_available = """
+                          SELECT c.CopyId, b.Title
+                          FROM BookCopy c
+                                   JOIN Book b ON c.BookId = b.BookId
+                          WHERE c.Status = 0
+                          ORDER BY b.Title
+                          """
+    # Lưu các copy mà còn mượn được
+    copies_list = _fetch_data_from_db(query_available)
+
+
+    # 4. Tải sách ĐANG MƯỢN (Status = 1) cho tab TRẢ SÁCH
+    query_onloan = """
+                       SELECT c.CopyId, b.Title
+                       FROM BookCopy c
+                        JOIN Book b ON c.BookId = b.BookId
+                       WHERE c.Status = 1
+                       ORDER BY c.CopyId
+                       """
+    # Trả ra các sách đang được mượn
+    onloan_list = _fetch_data_from_db(query_onloan)
+
+    return (readers_list, staff_list, copies_list, onloan_list)
